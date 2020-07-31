@@ -18,7 +18,7 @@ sleep1=30s             # polls every sleep1 sec
 
 if [ -z $configDir ]; then echo "please configure the config directory"; exit 1; fi
 keyfile=$(cat ${configDir}cli/config.yml | grep "keypair_path\:" | awk '{print $2}')
-installDir}="$(cat ${configDir}install/config.yml | grep 'active_release_dir\:' | awk '{print $2}')/bin"
+installDir="$(cat ${configDir}install/config.yml | grep 'active_release_dir\:' | awk '{print $2}')/bin"
 cli="${installDir}/solana"
 if [ -z $IdentityPubkey ]; then IdentityPubkey=$(${installDir}/solana-keygen pubkey $keyfile); fi
 if [ -z $IdentityPubkey ]; then echo "please configure the IdentityPubkey in the script"; exit 1; fi
