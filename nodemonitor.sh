@@ -1,9 +1,9 @@
 #!/bin/bash
 
-#####    Packages required: jq, bc
+#####    Packages required: bc
 
 #####    CONFIG    ##################################################################################################
-configDir="$(pwd ~)/.config/solana/" # the directory for the config files, eg.: /home/user/.config/solana/
+configDir="$HOME/.config/solana/" # the directory for the config files, eg.: /home/user/.config/solana/
 ##### optional:        #
 validatorChecks="on"   # set to 'on' for obtaining validator metrics
 IdentityPubkey=""      # identity pubkey for validator, can be empty when it corresponds to the default keypair pair in config.yml
