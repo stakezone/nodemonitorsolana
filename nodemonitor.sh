@@ -27,7 +27,6 @@ if [ -z  $cli ]; then echo "please configure cli manually or check the configDir
 
 if [ -z $rpcPort ]; then rpcPort="http://127.0.0.1:"$(ps aux | grep solana-validator | grep -Po "\-\-rpc\-port\s+\K[0-9]+"); fi
 if [ -z $rpcPort ]; then echo "please configure rpcPort"; exit 1; fi
-echo "$rpcPort"
 
 if [ -z $logname ]; then logname="nodemonitor-${USER}.log"; fi
 logfile="${logpath}/${logname}"
@@ -35,6 +34,7 @@ touch $logfile
 
 echo "log file: ${logfile}"
 echo "solana cli: ${cli}"
+echo "rpc url: ${rpcPort}"
 echo "identity pubkey: ${IdentityPubkey}"
 echo ""
 
