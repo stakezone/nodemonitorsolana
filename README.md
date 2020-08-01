@@ -1,23 +1,20 @@
 # nodemonitorsolana
-A complete log file based Solana validator up-time monitoring solution for Zabbix. It consists of the shell script nodemonitor.sh for generating human-readable log files on the host and the template zbx_5_template_nodemonitorsolana.xml for the Zabbix 5.0 server.
+A complete log file based Solana validator up-time monitoring solution for Zabbix. It consists of the shell script nodemonitor.sh for generating log files on the host and the template zbx_5_template_nodemonitorsolana.xml for the Zabbix 5.0 server.
 
 ### Concept
 
-nodemonitor.sh generates logs that look like:
+nodemonitor.sh generates human-readable logs that look like:
 
-```sh
 [2020-08-01 02:44:13-04:00] status=validating height=27383265 tFromNow=23 lastVote=27383322 rootBlock=27383268 leaderSlots=16 skippedSlots=0 pctSkipped=0 credits=15840625 activeStake=116197.93
 [2020-08-01 02:44:44-04:00] status=validating height=27383359 tFromNow=29 lastVote=27383400 rootBlock=27383369 leaderSlots=16 skippedSlots=0 pctSkipped=0 credits=15840697 activeStake=116197.93
 [2020-08-01 02:45:15-04:00] status=validating height=27383440 tFromNow=31 lastVote=27383480 rootBlock=27383443 leaderSlots=16 skippedSlots=0 pctSkipped=0 credits=15840771 activeStake=116197.93
-```
-For the Zabbix server there is a log module for analyzing log data.
 
-The log line entries that are used by the server are:
+For the Zabbix server there is a log module for analyzing log data. The log line entries that are used by the server are:
 
 * **status** can be {scriptstarted | error | delinquent | validating | up} 'error' can have various causes, typically the `solana-validator` process is down. 'up' means the node is confirmed running when the validator metrics are turned off.
-* **height** 'recent' block height from `solana block-time` call 
-* **tfromnow** time in seconds since height
-* **pctSkipped** percentage of skipped leader slots 
+* **tfromnow** time in seconds since recent slot height (used for chain hat detection)
+* **pctSkipped** percentage of skipped leader slots
+* **leaderSlots** number of leader slots
 * **activeStake** the active stake
 
 ### Installation
@@ -32,5 +29,3 @@ A Zabbix server is required that connects to the host running the Solana validat
 The Zabbix server is low on resources and a small size VPS is sufficient. However, lags can occur with the log file module. Performance problems with the server are mostly caused by the underlying database slowing down the processing. Database tuning might improve on the issues as well as changing the default Zabbix server parameters for caching etc.
 
 The timestamp from the `solana block-time` call appears to be inaccurate, however it does not affect the purpose of up-time monitoring.
-
-
