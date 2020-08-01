@@ -50,7 +50,6 @@ echo "[$date] status=scriptstarted" >>$logfile
 
 while true; do
     validatorBlockTime=$($cli slot --commitment recent --url $rpcPort | $cli block-time --url $rpcPort)
-echo $validatorBlockTime
     validatorBlockTimeTest=$(echo $validatorBlockTime | grep -c "Date")
     if [ "$validatorChecks" == "on" ]; then
        validatorBlockProduction=$($cli block-production --url $rpcPort | grep $IdentityPubkey | grep "$voteAccount")
