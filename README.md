@@ -1,4 +1,4 @@
-# nodemonitorgaiad
+# nodemonitorsolana
 A complete log file based Solana validator up-time monitoring solution for Zabbix. It consists of the shell script nodemonitor.sh for generating human-readable log files on the host and the template zbx_5_template_nodemonitorsolana.xml for the Zabbix 5.0 server.
 
 ### Concept
@@ -14,8 +14,8 @@ For the Zabbix server there is a log module for analyzing log data.
 
 The log line entries that are used by the server are:
 
-* **status** can be {scriptstarted | error | delinquent | validating | up} 'error' can have various causes, typically the solana-validator process is down. 'up' means the node is confirmed running when the validator metrics are turned off.
-* **height** 'recent' block height from solana block-time call 
+* **status** can be {scriptstarted | error | delinquent | validating | up} 'error' can have various causes, typically the `solana-validator` process is down. 'up' means the node is confirmed running when the validator metrics are turned off.
+* **height** 'recent' block height from `solana block-time` call 
 * **tfromnow** time in seconds since height
 * **pctSkipped** percentage of skipped leader slots 
 * **activeStake** the active stake
@@ -31,6 +31,6 @@ A Zabbix server is required that connects to the host running the Solana validat
 
 The Zabbix server is low on resources and a small size VPS is sufficient. However, lags can occur with the log file module. Performance problems with the server are mostly caused by the underlying database slowing down the processing. Database tuning might improve on the issues as well as changing the default Zabbix server parameters for caching etc.
 
-The timestamp from the `solana block-time` call appears to be inaccurate.
+The timestamp from the `solana block-time` call appears to be inaccurate, however it does not affect the purpose of up-time monitoring.
 
 
