@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<zabbix_export>
+    <version>5.0</version>
+    <date>2020-08-01T07:09:30Z</date>
+    <groups>
+        <group>
+            <name>Templates/Applications</name>
+        </group>
+    </groups>
+    <templates>
+        <template>
+            <template>Template App Solana Validator</template>
+            <name>Template App Solana Validator</name>
+            <description>Solana Node</description>
+            <groups>
+                <group>
+                    <name>Templates/Applications</name>
+                </group>
+            </groups>
+            <applications>
+                <application>
+                    <name>Solana Validator</name>
+                </application>
+            </applications>
+            <items>
+                <item>
+                    <name>activeStake</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>logrt[{$NMSLOGFILE},&quot;activeStake=([0-9\.]*)&quot;,,,skip,\1,]</key>
+                    <delay>{$NMSUPDATEINTERVAL}</delay>
+                    <history>5d</history>
+                    <value_type>FLOAT</value_type>
+                    <applications>
+                        <application>
+                            <name>Solana Validator</name>
+                        </application>
+                    </applications>
+                    <triggers>
+                        <trigger>
+                            <expression>{change()}&lt;&gt;0</expression>
+                            <name>{$NMSNODEID} active stake : change</name>
+                            <priority>INFO</priority>
+                            <manual_close>YES</manual_close>
+                        </trigger>
+                    </triggers>
+                </item>
+                <item>
+                    <name>leaderSlots</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>logrt[{$NMSLOGFILE},&quot;leaderSlots=([0-9\.]*)&quot;,,,skip,\1,]</key>
+                    <delay>{$NMSUPDATEINTERVAL}</delay>
+                    <history>5d</history>
+                    <trends>14d</trends>
+                    <applications>
+                        <application>
+                            <name>Solana Validator</name>
+                        </application>
+                    </applications>
+                </item>
+                <item>
+                    <name>nodemonitor pctSkipped</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>logrt[{$NMSLOGFILE},&quot;pctSkipped=([0-9\.]*)&quot;,,,skip,\1,]</key>
+                    <delay>{$NMSUPDATEINTERVAL}</delay>
+                    <history>5d</history>
+                    <trends>14d</trends>
+                    <value_type>FLOAT</value_type>
+                    <applications>
+                        <application>
+                            <name>Solana Validator</name>
+                        </application>
+                    </applications>
+                </item>
+                <item>
+                    <name>nodemonitor status</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>logrt[{$NMSLOGFILE},&quot;status=(\w*)&quot;,,,skip,\1,]</key>
+                    <delay>{$NMSUPDATEINTERVAL}</delay>
+                    <history>5d</history>
+                    <trends>0</trends>
+                    <value_type>CHAR</value_type>
+                    <description>scriptstarted | error | up | active | delinquent&#13;
+&#13;
+error can have various causes, typically the solana-validator process is down.</description>
+                    <applications>
+                        <application>
+                            <name>Solana Validator</name>
+                        </application>
+                    </applications>
+                    <triggers>
+                        <trigger>
+                            <expression>{nodata({$NMSNODATA})}=1</expression>
+                            <name>{$NMSNODEID} no log data : T &gt; {$NMSNODATA}</name>
+                            <priority>HIGH</priority>
+                            <manual_close>YES</manual_close>
+                        </trigger>
+                        <trigger>
+                            <expression>{iregexp(delinquent,#1)}=1</expression>
+                            <name>{$NMSNODEID} status : delinquent</name>
+                            <priority>WARNING</priority>
+                            <manual_close>YES</manual_close>
+                        </trigger>
+                        <trigger>
+                            <expression>{iregexp(error,#1)}=1</expression>
+                            <name>{$NMSNODEID} status : error</name>
+                            <priority>HIGH</priority>
+                            <manual_close>YES</manual_close>
+                        </trigger>
+                        <trigger>
+                            <expression>{iregexp(scriptstarted,#1)}=1</expression>
+                            <name>{$NMSNODEID} status : script started</name>
+                            <priority>INFO</priority>
+                            <manual_close>YES</manual_close>
+                        </trigger>
+                    </triggers>
+                </item>
+                <item>
+                    <name>nodemonitor tFromNow</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>logrt[{$NMSLOGFILE},&quot;tFromNow=([0-9\.\-]*)&quot;,,,skip,\1,]</key>
+                    <delay>{$NMSUPDATEINTERVAL}</delay>
+                    <history>5d</history>
+                    <value_type>FLOAT</value_type>
+                    <applications>
+                        <application>
+                            <name>Solana Validator</name>
+                        </application>
+                    </applications>
+                    <triggers>
+                        <trigger>
+                            <expression>{last()}&gt;{$NMSTLASTBLOCKFROMNOW}</expression>
+                            <name>{$NMSNODEID} tfromnow &gt; {$NMSTLASTBLOCKFROMNOW} : T={ITEM.VALUE}</name>
+                            <priority>WARNING</priority>
+                            <manual_close>YES</manual_close>
+                        </trigger>
+                    </triggers>
+                </item>
+            </items>
+            <macros>
+                <macro>
+                    <macro>{$NMSLOGFILE}</macro>
+                    <description>Location of the nodemonitor log file on the host, example: /home/user/nodemonitorsolana/nodemonitor-user.log</description>
+                </macro>
+                <macro>
+                    <macro>{$NMSNODATA}</macro>
+                    <value>120</value>
+                    <description>Time is seconds for no data received trigger</description>
+                </macro>
+                <macro>
+                    <macro>{$NMSNODEID}</macro>
+                    <value>Solana</value>
+                    <description>Identifier for the node on the server (useful if more than one are hosted).</description>
+                </macro>
+                <macro>
+                    <macro>{$NMSTHRSHLDLEADERSLOTS}</macro>
+                    <value>50</value>
+                    <description>Default threshold value for min #leaderSlots required for activating the pctSkipped trigger</description>
+                </macro>
+                <macro>
+                    <macro>{$NMSTLASTBLOCKFROMNOW}</macro>
+                    <value>300</value>
+                    <description>Time in seconds from the blockheight in the logfile that triggers a warning (chain halt detection).</description>
+                </macro>
+                <macro>
+                    <macro>{$NMSUPDATEINTERVAL}</macro>
+                    <value>1s</value>
+                    <description>update interval for items</description>
+                </macro>
+            </macros>
+        </template>
+    </templates>
+    <triggers>
+        <trigger>
+            <expression>{Template App Solana Validator:logrt[{$NMSLOGFILE},&quot;pctSkipped=([0-9\.]*)&quot;,,,skip,\1,].last()}&gt;=20 and {Template App Solana Validator:logrt[{$NMSLOGFILE},&quot;leaderSlots=([0-9\.]*)&quot;,,,skip,\1,].last()}&gt;{$NMSTHRSHLDLEADERSLOTS} and {Template App Solana Validator:logrt[{$NMSLOGFILE},&quot;leaderSlots=([0-9\.]*)&quot;,,,skip,\1,].last()}&gt;{$NMSTHRSHLDLEADERSLOTS}</expression>
+            <name>{$NMSNODEID} %skipped &gt;= 20 : pct={ITEM.VALUE}</name>
+            <priority>WARNING</priority>
+            <manual_close>YES</manual_close>
+        </trigger>
+        <trigger>
+            <expression>{Template App Solana Validator:logrt[{$NMSLOGFILE},&quot;pctSkipped=([0-9\.]*)&quot;,,,skip,\1,].last()}&gt;5 and {Template App Solana Validator:logrt[{$NMSLOGFILE},&quot;pctSkipped=([0-9\.]*)&quot;,,,skip,\1,].last()}&lt;10 and {Template App Solana Validator:logrt[{$NMSLOGFILE},&quot;leaderSlots=([0-9\.]*)&quot;,,,skip,\1,].last()}&gt;{$NMSTHRSHLDLEADERSLOTS}</expression>
+            <name>{$NMSNODEID} 5 &lt; %skipped &lt; 10 : pct={ITEM.VALUE}</name>
+            <priority>INFO</priority>
+            <manual_close>YES</manual_close>
+        </trigger>
+        <trigger>
+            <expression>{Template App Solana Validator:logrt[{$NMSLOGFILE},&quot;pctSkipped=([0-9\.]*)&quot;,,,skip,\1,].last()}&gt;=10 and {Template App Solana Validator:logrt[{$NMSLOGFILE},&quot;pctSkipped=([0-9\.]*)&quot;,,,skip,\1,].last()}&lt;20 and {Template App Solana Validator:logrt[{$NMSLOGFILE},&quot;leaderSlots=([0-9\.]*)&quot;,,,skip,\1,].last()}&gt;{$NMSTHRSHLDLEADERSLOTS}</expression>
+            <name>{$NMSNODEID} 10 &lt;= %skipped &lt; 20 : pct={ITEM.VALUE}</name>
+            <priority>WARNING</priority>
+            <manual_close>YES</manual_close>
+        </trigger>
+    </triggers>
+    <graphs>
+        <graph>
+            <name>pctSkipped</name>
+            <graph_items>
+                <graph_item>
+                    <color>199C0D</color>
+                    <item>
+                        <host>Template App Solana Validator</host>
+                        <key>logrt[{$NMSLOGFILE},&quot;pctSkipped=([0-9\.]*)&quot;,,,skip,\1,]</key>
+                    </item>
+                </graph_item>
+            </graph_items>
+        </graph>
+        <graph>
+            <name>solana metrics</name>
+            <graph_items>
+                <graph_item>
+                    <color>199C0D</color>
+                    <item>
+                        <host>Template App Solana Validator</host>
+                        <key>logrt[{$NMSLOGFILE},&quot;pctSkipped=([0-9\.]*)&quot;,,,skip,\1,]</key>
+                    </item>
+                </graph_item>
+                <graph_item>
+                    <sortorder>1</sortorder>
+                    <color>F7941D</color>
+                    <item>
+                        <host>Template App Solana Validator</host>
+                        <key>logrt[{$NMSLOGFILE},&quot;tFromNow=([0-9\.\-]*)&quot;,,,skip,\1,]</key>
+                    </item>
+                </graph_item>
+            </graph_items>
+        </graph>
+    </graphs>
+</zabbix_export>
+
