@@ -24,7 +24,7 @@ if [ -z  $installDir ]; then echo "please configure the cli manually or check th
 if [ -z  $cli ]; then cli="${installDir}/solana"; fi
 
 if [ -z $rpcPort ]; then rpcPort=$(ps aux | grep solana-validator | grep -Po "\-\-rpc\-port\s+\K[0-9]+"); fi
-if [ -z $rpcPort ]; then echo "please configure rpcPort"; exit 1; fi
+if [ -z $rpcPort ]; then echo "auto-detection failed, please configure the rpcPort"; exit 1; fi
 rpcURL="http://127.0.0.1:$rpcPort"
 
 if [ -z $voteAccount ]; then echo "please configure the vote account in the script"; exit 1; fi
@@ -56,7 +56,6 @@ while true; do
     validatorBlockTimeTest=$(echo $validatorBlockTime | grep -c "Date")
     if [ "$validatorChecks" == "on" ]; then
        validatorBlockProduction=$($cli block-production --url  $rpcURL | grep "$IdentityPubkey")
-echo $validatorBlockProduction
        validatorInfo=$($cli validators --url  $rpcURL | grep "$voteAccount")
     fi
     if [[ (-n "$validatorInfo" && "$validatorChecks" == "on")  ]] || [[ ("$validatorBlockTimeTest" -eq "1" && "$validatorChecks" != "on") ]]; then
