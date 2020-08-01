@@ -3,7 +3,7 @@
 #####    Packages required: bc
 
 #####    CONFIG    ##################################################################################################
-voteAccount="4ZY1SpBLcmqLVDrEotXs7mtZ3HLQapUzWHfYv9wK22n4"         # vote account address for the validator
+voteAccount=""         # vote account address for the validator
 configDir="$HOME/.config/solana/" # the directory for the config files, eg.: /home/user/.config/solana/
 ##### optional:        #
 validatorChecks="on"   # set to 'on' for obtaining validator metrics
