@@ -3,11 +3,11 @@
 #####    Packages required: bc
 
 #####    CONFIG    ##################################################################################################
-voteAccount=""         # vote account address for the validator
 configDir="$HOME/.config/solana/" # the directory for the config files, eg.: /home/user/.config/solana/
 ##### optional:        #
+voteAccount=""         # vote account address for the validator
+identityPubkey=""      # identity pubkey for validator, insert if auto-discovery fails
 validatorChecks="on"   # set to 'on' for obtaining validator metrics
-IdentityPubkey=""      # identity pubkey for validator, insert if auto-discovery fails
 cli=""                 # auto detection of the solana cli can fail, in case insert like /path/solana
 rpcPort=""             # value of --rpc-port for solana-validator, insert if auto-discovery fails
 logname=""             # a custom monitor log file name can be chosen, if left empty default is nodecheck-<username>.log
@@ -27,9 +27,12 @@ if [ -z $rpcPort ]; then rpcPort=$(ps aux | grep solana-validator | grep -Po "\-
 if [ -z $rpcPort ]; then echo "auto-detection failed, please configure the rpcPort"; exit 1; fi
 rpcURL="http://127.0.0.1:$rpcPort"
 
+if [ -z $voteAccount ]; then voteAccount=$($installDir/solana-keygen pubkey $(ps aux | grep solana-validator | grep -Po "\-\-vote\-account\s+\K[^ ]+")); fi
+echo m
+echo $voteAccount
 if [ -z $voteAccount ]; then echo "please configure the vote account in the script"; exit 1; fi
-if [ -z $IdentityPubkey ]; then IdentityPubkey=$(echo "a"$($cli validators --url $rpcURL | grep "$voteAccount") | awk '{print $2}'); fi #fix empty space with prefix 'a'
-if [ -z $IdentityPubkey ]; then echo "auto-detection failed, please configure the IdentityPubkey in the script"; exit 1; fi
+if [ -z $identityPubkey ]; then identityPubkey=$(echo "a"$($cli validators --url $rpcURL | grep "$voteAccount") | awk '{print $2}'); fi #fix empty space with prefix 'a'
+if [ -z $identityPubkey ]; then echo "auto-detection failed, please configure the identityPubkey in the script"; exit 1; fi
 
 if [ -z $logname ]; then logname="nodemonitor-${USER}.log"; fi
 logfile="${logpath}/${logname}"
@@ -38,7 +41,7 @@ touch $logfile
 echo "log file: ${logfile}"
 echo "solana cli: ${cli}"
 echo "rpc url: ${rpcURL}"
-echo "identity pubkey: ${IdentityPubkey}"
+echo "identity pubkey: ${identityPubkey}"
 echo "vote account: ${voteAccount}"
 echo ""
 
@@ -55,7 +58,7 @@ while true; do
     validatorBlockTime=$($cli slot --commitment recent --url  $rpcURL | $cli block-time --url  $rpcURL)
     validatorBlockTimeTest=$(echo $validatorBlockTime | grep -c "Date")
     if [ "$validatorChecks" == "on" ]; then
-       validatorBlockProduction=$($cli block-production --url  $rpcURL | grep "$IdentityPubkey")
+       validatorBlockProduction=$($cli block-production --url  $rpcURL | grep "$identityPubkey")
        validatorInfo=$($cli validators --url  $rpcURL | grep "$voteAccount")
     fi
     if [[ (-n "$validatorInfo" && "$validatorChecks" == "on")  ]] || [[ ("$validatorBlockTimeTest" -eq "1" && "$validatorChecks" != "on") ]]; then
