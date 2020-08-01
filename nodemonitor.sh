@@ -27,9 +27,7 @@ if [ -z $rpcPort ]; then rpcPort=$(ps aux | grep solana-validator | grep -Po "\-
 if [ -z $rpcPort ]; then echo "auto-detection failed, please configure the rpcPort"; exit 1; fi
 rpcURL="http://127.0.0.1:$rpcPort"
 
-if [ -z $voteAccount ]; then voteAccount=$($installDir/solana-keygen pubkey $(ps aux | grep solana-validator | grep -Po "\-\-vote\-account\s+\K[^ ]+")); fi
-echo m
-echo $voteAccount
+if [ -z $voteAccount ]; then voteAccount=$(ps aux | grep solana-validator | grep -Po "\-\-vote\-account\s+\K[^ ]+"); fi
 if [ -z $voteAccount ]; then echo "please configure the vote account in the script"; exit 1; fi
 if [ -z $identityPubkey ]; then identityPubkey=$(echo "a"$($cli validators --url $rpcURL | grep "$voteAccount") | awk '{print $2}'); fi #fix empty space with prefix 'a'
 if [ -z $identityPubkey ]; then echo "auto-detection failed, please configure the identityPubkey in the script"; exit 1; fi
