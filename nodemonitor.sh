@@ -3,7 +3,7 @@
 #####    Packages required: bc
 
 #####    CONFIG    ##################################################################################################
-voteAccount=""         # vote account address for the validator
+voteAccount="4ZY1SpBLcmqLVDrEotXs7mtZ3HLQapUzWHfYv9wK22n4"         # vote account address for the validator
 configDir="$HOME/.config/solana/" # the directory for the config files, eg.: /home/user/.config/solana/
 ##### optional:        #
 validatorChecks="on"   # set to 'on' for obtaining validator metrics
@@ -21,8 +21,8 @@ if [ -z $configDir ]; then echo "please configure the config directory"; exit 1;
 installDir="$(cat ${configDir}install/config.yml | grep 'active_release_dir\:' | awk '{print $2}')/bin"
 if [ -z  $installDir ]; then echo "please configure the cli manually or check the configDir setting"; exit 1; fi
 
-if [ -z  $cli ]; then cli="${installDir}/solana"
- 
+if [ -z  $cli ]; then cli="${installDir}/solana"; fi
+
 if [ -z $rpcPort ]; then rpcPort=$(ps aux | grep solana-validator | grep -Po "\-\-rpc\-port\s+\K[0-9]+"); fi
 if [ -z $rpcPort ]; then echo "please configure rpcPort"; exit 1; fi
 rpcURL="http://127.0.0.1:$rpcPort"
