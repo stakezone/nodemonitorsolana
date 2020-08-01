@@ -70,9 +70,10 @@ while true; do
            if [ $status == "validating" ]; then
               leaderSlots=$(echo $validatorBlockProduction | awk '{print $2}')
               skippedSlots=$(echo $validatorBlockProduction | awk '{print $4}')
+              activeStake=$(echo "scale=2 ; $(echo $validatorInfo | awk '{print $8}') / 1.0" | bc)
               if [ -n "$leaderSlots" ]; then pctSkipped=$(echo "scale=2 ; 100 * $skippedSlots / $leaderSlots" | bc); fi
               logentry="$logentry leaderSlots=$leaderSlots skippedSlots=$skippedSlots pctSkipped=$pctSkipped"
-              logentry="$logentry credits=$(echo $validatorInfo | awk '{print $7}') activeStake=$(echo $validatorInfo | awk '{print $8}')"
+              logentry="$logentry credits=$(echo $validatorInfo | awk '{print $7}') activeStake=$activeStake"
            fi
         fi
         logentry="[$now] status=$status $logentry"
