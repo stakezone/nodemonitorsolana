@@ -4,11 +4,11 @@ A complete log file based Solana validator up-time monitoring solution for Zabbi
 ### Concept
 
 nodemonitor.sh generates human-readable logs that look like:
-
+`
 [2020-08-01 02:44:13-04:00] status=validating height=27383265 tFromNow=23 lastVote=27383322 rootBlock=27383268 leaderSlots=16 skippedSlots=0 pctSkipped=0 credits=15840625 activeStake=116197.93
 [2020-08-01 02:44:44-04:00] status=validating height=27383359 tFromNow=29 lastVote=27383400 rootBlock=27383369 leaderSlots=16 skippedSlots=0 pctSkipped=0 credits=15840697 activeStake=116197.93
 [2020-08-01 02:45:15-04:00] status=validating height=27383440 tFromNow=31 lastVote=27383480 rootBlock=27383443 leaderSlots=16 skippedSlots=0 pctSkipped=0 credits=15840771 activeStake=116197.93
-
+`
 For the Zabbix server there is a log module for analyzing log data. The log line entries that are used by the server are:
 
 * **status** can be {scriptstarted | error | delinquent | validating | up} 'error' can have various causes, typically the `solana-validator` process is down. 'up' means the node is confirmed running when the validator metrics are turned off.
