@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>5.0</version>
-    <date>2020-08-01T17:01:36Z</date>
+    <date>2020-08-06T20:33:14Z</date>
     <groups>
         <group>
             <name>Templates/Applications</name>
@@ -38,8 +38,10 @@
                     <triggers>
                         <trigger>
                             <expression>{change()}&lt;&gt;0</expression>
-                            <name>{$NMSNODEID} active stake : change</name>
+                            <recovery_mode>NONE</recovery_mode>
+                            <name>{$NMSNODEID} : active stake : change : new={ITEM.VALUE}</name>
                             <priority>INFO</priority>
+                            <description>fffff</description>
                             <manual_close>YES</manual_close>
                         </trigger>
                     </triggers>
@@ -90,25 +92,25 @@ error can have various causes, typically the solana-validator process is down.</
                     <triggers>
                         <trigger>
                             <expression>{nodata({$NMSNODATA})}=1</expression>
-                            <name>{$NMSNODEID} no log data : T &gt; {$NMSNODATA}</name>
+                            <name>{$NMSNODEID} : no log data : T &gt; {$NMSNODATA}</name>
                             <priority>HIGH</priority>
                             <manual_close>YES</manual_close>
                         </trigger>
                         <trigger>
                             <expression>{iregexp(delinquent,#1)}=1</expression>
-                            <name>{$NMSNODEID} status : delinquent</name>
+                            <name>{$NMSNODEID} : status : delinquent</name>
                             <priority>WARNING</priority>
                             <manual_close>YES</manual_close>
                         </trigger>
                         <trigger>
                             <expression>{iregexp(error,#1)}=1</expression>
-                            <name>{$NMSNODEID} status : error</name>
+                            <name>{$NMSNODEID} : status : error</name>
                             <priority>HIGH</priority>
                             <manual_close>YES</manual_close>
                         </trigger>
                         <trigger>
                             <expression>{iregexp(scriptstarted,#1)}=1</expression>
-                            <name>{$NMSNODEID} status : script started</name>
+                            <name>{$NMSNODEID} : status : script started</name>
                             <priority>INFO</priority>
                             <manual_close>YES</manual_close>
                         </trigger>
@@ -129,7 +131,7 @@ error can have various causes, typically the solana-validator process is down.</
                     <triggers>
                         <trigger>
                             <expression>{last()}&gt;{$NMSTLASTBLOCKFROMNOW}</expression>
-                            <name>{$NMSNODEID} tfromnow &gt; {$NMSTLASTBLOCKFROMNOW} : T={ITEM.VALUE}</name>
+                            <name>{$NMSNODEID} : tfromnow &gt; {$NMSTLASTBLOCKFROMNOW} : T={ITEM.VALUE}</name>
                             <priority>WARNING</priority>
                             <manual_close>YES</manual_close>
                         </trigger>
@@ -144,7 +146,7 @@ error can have various causes, typically the solana-validator process is down.</
                 <macro>
                     <macro>{$NMSNODATA}</macro>
                     <value>120</value>
-                    <description>Time in seconds for no data received trigger</description>
+                    <description>Time is seconds for no data received trigger</description>
                 </macro>
                 <macro>
                     <macro>{$NMSNODEID}</macro>
@@ -154,12 +156,12 @@ error can have various causes, typically the solana-validator process is down.</
                 <macro>
                     <macro>{$NMSTHRSHLDLEADERSLOTS}</macro>
                     <value>50</value>
-                    <description>Default threshold value for min #leaderSlots that are activating the pctSkipped trigger</description>
+                    <description>Default threshold value for min #leaderSlots activating pctSkipped trigger</description>
                 </macro>
                 <macro>
                     <macro>{$NMSTLASTBLOCKFROMNOW}</macro>
                     <value>300</value>
-                    <description>Time in seconds from the height in the logfile that triggers a warning (chain halt detection).</description>
+                    <description>Time in seconds from the blockheight in the logfile that triggers a warning (chain halt detection).</description>
                 </macro>
                 <macro>
                     <macro>{$NMSUPDATEINTERVAL}</macro>
@@ -172,26 +174,38 @@ error can have various causes, typically the solana-validator process is down.</
     <triggers>
         <trigger>
             <expression>{Template App Solana Validator:logrt[{$NMSLOGFILE},&quot;pctSkipped=([0-9\.]*)&quot;,,,skip,\1,].last()}&gt;=20 and {Template App Solana Validator:logrt[{$NMSLOGFILE},&quot;leaderSlots=([0-9\.]*)&quot;,,,skip,\1,].last()}&gt;{$NMSTHRSHLDLEADERSLOTS} and {Template App Solana Validator:logrt[{$NMSLOGFILE},&quot;leaderSlots=([0-9\.]*)&quot;,,,skip,\1,].last()}&gt;{$NMSTHRSHLDLEADERSLOTS}</expression>
-            <name>{$NMSNODEID} %skipped &gt;= 20 : pct={ITEM.VALUE} for leaderSlots &gt; {$NMSTHRSHLDLEADERSLOTS} : pct={ITEM.VALUE}</name>
+            <name>{$NMSNODEID} : %skipped &gt;= 20  for leaderSlots &gt; {$NMSTHRSHLDLEADERSLOTS} : pct={ITEM.VALUE}</name>
             <priority>WARNING</priority>
             <manual_close>YES</manual_close>
         </trigger>
         <trigger>
             <expression>{Template App Solana Validator:logrt[{$NMSLOGFILE},&quot;pctSkipped=([0-9\.]*)&quot;,,,skip,\1,].last()}&gt;5 and {Template App Solana Validator:logrt[{$NMSLOGFILE},&quot;pctSkipped=([0-9\.]*)&quot;,,,skip,\1,].last()}&lt;10 and {Template App Solana Validator:logrt[{$NMSLOGFILE},&quot;leaderSlots=([0-9\.]*)&quot;,,,skip,\1,].last()}&gt;{$NMSTHRSHLDLEADERSLOTS}</expression>
-            <name>{$NMSNODEID} 5 &lt; %skipped &lt; 10 for leaderSlots &gt; {$NMSTHRSHLDLEADERSLOTS} : pct={ITEM.VALUE}</name>
+            <name>{$NMSNODEID} : 5 &lt; %skipped &lt; 10 for leaderSlots &gt; {$NMSTHRSHLDLEADERSLOTS} : pct={ITEM.VALUE}</name>
             <priority>INFO</priority>
             <manual_close>YES</manual_close>
         </trigger>
         <trigger>
             <expression>{Template App Solana Validator:logrt[{$NMSLOGFILE},&quot;pctSkipped=([0-9\.]*)&quot;,,,skip,\1,].last()}&gt;=10 and {Template App Solana Validator:logrt[{$NMSLOGFILE},&quot;pctSkipped=([0-9\.]*)&quot;,,,skip,\1,].last()}&lt;20 and {Template App Solana Validator:logrt[{$NMSLOGFILE},&quot;leaderSlots=([0-9\.]*)&quot;,,,skip,\1,].last()}&gt;{$NMSTHRSHLDLEADERSLOTS}</expression>
-            <name>{$NMSNODEID} 10 &lt;= %skipped &lt; 20 : pct={ITEM.VALUE} for leaderSlots &gt; {$NMSTHRSHLDLEADERSLOTS} : pct={ITEM.VALUE}</name>
-            <priority>WARNING</priority>
+            <name>{$NMSNODEID} : 10 &lt;= %skipped &lt; 20  for leaderSlots &gt; {$NMSTHRSHLDLEADERSLOTS} : pct={ITEM.VALUE}</name>
+            <priority>INFO</priority>
             <manual_close>YES</manual_close>
         </trigger>
     </triggers>
     <graphs>
         <graph>
-            <name>pctSkipped</name>
+            <name>leader slots</name>
+            <graph_items>
+                <graph_item>
+                    <color>199C0D</color>
+                    <item>
+                        <host>Template App Solana Validator</host>
+                        <key>logrt[{$NMSLOGFILE},&quot;leaderSlots=([0-9\.]*)&quot;,,,skip,\1,]</key>
+                    </item>
+                </graph_item>
+            </graph_items>
+        </graph>
+        <graph>
+            <name>percentage of skipped leader slots</name>
             <graph_items>
                 <graph_item>
                     <color>199C0D</color>
@@ -203,18 +217,10 @@ error can have various causes, typically the solana-validator process is down.</
             </graph_items>
         </graph>
         <graph>
-            <name>solana metrics</name>
+            <name>t from now for slot height</name>
             <graph_items>
                 <graph_item>
                     <color>199C0D</color>
-                    <item>
-                        <host>Template App Solana Validator</host>
-                        <key>logrt[{$NMSLOGFILE},&quot;pctSkipped=([0-9\.]*)&quot;,,,skip,\1,]</key>
-                    </item>
-                </graph_item>
-                <graph_item>
-                    <sortorder>1</sortorder>
-                    <color>F7941D</color>
                     <item>
                         <host>Template App Solana Validator</host>
                         <key>logrt[{$NMSLOGFILE},&quot;tFromNow=([0-9\.\-]*)&quot;,,,skip,\1,]</key>
