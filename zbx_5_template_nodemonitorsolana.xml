@@ -39,7 +39,7 @@
                         <trigger>
                             <expression>{change()}&lt;&gt;0</expression>
                             <recovery_mode>NONE</recovery_mode>
-                            <name>{$NMSNODEID} : active stake : change : new={ITEM.VALUE}</name>
+                            <name>{$NMSNODEID} : activated stake : change : new={ITEM.VALUE}</name>
                             <priority>INFO</priority>
                             <description>fffff</description>
                             <manual_close>YES</manual_close>
