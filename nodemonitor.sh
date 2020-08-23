@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#####    Packages required: bc
+#####    Packages required: jq,bc
 
 #####    CONFIG    ##################################################################################################
 configDir="$HOME/.config/solana/" # the directory for the config files, eg.: /home/user/.config/solana/
@@ -29,7 +29,8 @@ rpcURL="http://127.0.0.1:$rpcPort"
 
 if [ -z $voteAccount ]; then voteAccount=$(ps aux | grep solana-validator | grep -Po "\-\-vote\-account\s+\K\w+"); fi
 if [ -z $voteAccount ]; then echo "please configure the vote account in the script"; exit 1; fi
-if [ -z $identityPubkey ]; then identityPubkey=$(echo "a"$($cli validators --url $rpcURL | grep "$voteAccount") | awk '{print $2}'); fi #fix empty space with prefix 'a'
+#if [ -z $identityPubkey ]; then identityPubkey=$(echo "a"$($cli validators --url $rpcURL | grep "$voteAccount") | awk '{print $2}'); fi #fix empty space with prefix 'a'
+if [ -z $identityPubkey ]; then identityPubkey=$($cli validators --url $rpcURL --output json-compact | jq -r '.currentValidators[] | select(.voteAccountPubkey == '\"$voteAccount\"') | .identityPubkey'); fi
 if [ -z $identityPubkey ]; then echo "auto-detection failed, please configure the identityPubkey in the script"; exit 1; fi
 
 if [ -z $logname ]; then logname="nodemonitor-${USER}.log"; fi
@@ -53,32 +54,43 @@ date=$(date --rfc-3339=seconds)
 echo "[$date] status=scriptstarted" >>$logfile
 
 while true; do
-    validatorBlockTime=$($cli slot --commitment recent --url  $rpcURL | $cli block-time --url  $rpcURL)
-    validatorBlockTimeTest=$(echo $validatorBlockTime | grep -c "Date")
+    validatorBlockTime=$($cli slot --commitment recent --url  $rpcURL | $cli block-time --url  $rpcURL --output json-compact)
+    validatorBlockTimeTest=$(echo $validatorBlockTime | grep -c "timestamp")
     if [ "$validatorChecks" == "on" ]; then
-       validatorBlockProduction=$($cli block-production --url  $rpcURL | grep "$identityPubkey")
-       validatorInfo=$($cli validators --url  $rpcURL | grep "$voteAccount")
+      #validatorBlockProduction=$($cli block-production --url  $rpcURL | grep "$identityPubkey")
+       validatorBlockProduction=$($cli block-production --url $rpcURL --output json-compact | jq -r '.leaders[] | select(.identityPubkey == '\"$identityPubkey\"')')
+       currentValidatorInfo=$($cli validators --url $rpcURL --output json-compact | jq -r '.currentValidators[] | select(.voteAccountPubkey == '\"$voteAccount\"')')
+       delinquentValidatorInfo=$($cli validators --url $rpcURL --output json-compact | jq -r '.delinquentValidators[] | select(.voteAccountPubkey == '\"$voteAccount\"')')
     fi
-    if [[ (-n "$validatorInfo" && "$validatorChecks" == "on")  ]] || [[ ("$validatorBlockTimeTest" -eq "1" && "$validatorChecks" != "on") ]]; then
-        validatorInfo="a"$validatorInfo  #fix empty space with prefix 'a'
+    if [[ ((-n "$currentValidatorInfo" || "$delinquentValidatorInfo" ) && "$validatorChecks" == "on")  ]] || [[ ("$validatorBlockTimeTest" -eq "1" && "$validatorChecks" != "on") ]]; then
         status="up"
-        blockHeight=$(echo $validatorBlockTime | grep "Block:" | awk '{print $2}')
-        blockHeightTime=$(echo $validatorBlockTime | grep "UnixTimestamp:" | awk '{print $6}' | sed 's/)/ /g')
+        blockHeight=$(jq -r '.slot' <<<$validatorBlockTime)
+        blockHeightTime=$(jq -r '.timestamp' <<<$validatorBlockTime)
         now=$(date --rfc-3339=seconds)
-        #blockHeightFromNow=$(expr $(date +%s -d "$now") - $(date +%s -d $blockHeightTime))
         blockHeightFromNow=$(expr $(date +%s) - $blockHeightTime)
         logentry="height=${blockHeight} tFromNow=${blockHeightFromNow}"
         if [ "$validatorChecks" == "on" ]; then
-           if [ $(echo $validatorInfo | awk '{print $1}') == "a!" ]; then status=delinquent; elif [ "$validatorInfo" == "a" ]; then status=error; else status=validating; fi
-           logentry="$logentry lastVote=$(echo $validatorInfo | awk '{print $5}') rootBlock=$(echo $validatorInfo | awk '{print $6}')"
-           if [ $status == "validating" ]; then
-              leaderSlots=$(echo $validatorBlockProduction | awk '{print $2}')
-              skippedSlots=$(echo $validatorBlockProduction | awk '{print $4}')
-              activeStake=$(echo "scale=2 ; $(echo $validatorInfo | awk '{print $8}') / 1.0" | bc)
+           if [ -n "$delinquentValidatorInfo" ]; then
+              status=delinquent
+              activatedStake=$(jq -r '.activatedStake' <<<$delinquentValidatorInfo)
+              credits=$(jq -r '.credits' <<<$delinquentValidatorInfo)
+              version=$(jq -r '.version' <<<$delinquentValidatorInfo | sed 's/ /-/g')
+              commission=$(jq -r '.commission' <<<$delinquentValidatorInfo)
+              logentry="$logentry lastVote=$(jq -r '.lastVote' <<<$delinquentValidatorInfo) rootSlot=$(jq -r '.rootSlot' <<<$delinquentValidatorInfo) credits=$credits activatedStake=$activatedStake version=$version commission=$commission"
+           elif [ -n "$currentValidatorInfo" ]; then
+              status=validating
+              activatedStake=$(jq -r '.activatedStake' <<<$currentValidatorInfo)
+              credits=$(jq -r '.credits' <<<$currentValidatorInfo)
+              version=$(jq -r '.version' <<<$currentValidatorInfo | sed 's/ /-/g')
+              commission=$(jq -r '.commission' <<<$currentValidatorInfo)
+              logentry="$logentry lastVote=$(jq -r '.lastVote' <<<$currentValidatorInfo) rootSlot=$(jq -r '.rootSlot' <<<$currentValidatorInfo)"
+              leaderSlots=$(jq -r '.leaderSlots' <<<$validatorBlockProduction)
+              skippedSlots=$(jq -r '.skippedSlots' <<<$validatorBlockProduction)
+              activatedStake=$(echo "scale=2 ; $activatedStake / 1.0" | bc)
               if [ -n "$leaderSlots" ]; then pctSkipped=$(echo "scale=2 ; 100 * $skippedSlots / $leaderSlots" | bc); fi
               logentry="$logentry leaderSlots=$leaderSlots skippedSlots=$skippedSlots pctSkipped=$pctSkipped"
-              logentry="$logentry credits=$(echo $validatorInfo | awk '{print $7}') activeStake=$activeStake"
-           fi
+              logentry="$logentry credits=$credits activatedStake=$activatedStake version=$version commission=$commission"
+           else status=error; fi
         fi
         logentry="[$now] status=$status $logentry"
         echo "$logentry" >>$logfile
