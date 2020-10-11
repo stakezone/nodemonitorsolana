@@ -105,8 +105,8 @@ while true; do
 		   nodes=$($cli gossip | grep -Po "Nodes:\s+\K[0-9]+")
 		   epochInfo=$($cli epoch-info --url $rpcURL --output json-compact)
 		   epoch=$(jq -r '.epoch' <<<$epochInfo)
-		   pctEpochPctElapsed=$(echo "scale=2 ; 100 * $(jq -r '.slotIndex' <<<$epochInfo) / $(jq -r '.slotsInEpoch' <<<$epochInfo)" | bc)
-           logentry="$logentry pctTotDelinquent=$pctTotDelinquent nodes=$nodes epoch=$epoch pctEpochPctElapsed=$pctEpochPctElapsed"	   
+		   pctEpochElapsed=$(echo "scale=2 ; 100 * $(jq -r '.slotIndex' <<<$epochInfo) / $(jq -r '.slotsInEpoch' <<<$epochInfo)" | bc)
+           logentry="$logentry pctTotDelinquent=$pctTotDelinquent nodes=$nodes epoch=$epoch pctEpochElapsed=$pctEpochElapsed"	   
         fi
         logentry="[$now] status=$status $logentry"
         echo "$logentry" >>$logfile
