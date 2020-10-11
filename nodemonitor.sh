@@ -5,9 +5,10 @@
 #####    CONFIG    ##################################################################################################
 configDir="$HOME/.config/solana/" # the directory for the config files, eg.: /home/user/.config/solana/
 ##### optional:        #
-sleep1=30s             # polls every sleep1 sec
 identityPubkey=""      # identity pubkey for the validator, insert if autodiscovery fails
 voteAccount=""         # vote account address for the validator, specify if there are more than one or if autodiscovery fails
+sleep1=30s             # polls every sleep1 sec
+slotinterval="100"     # interval of slots for calculating average slot time
 validatorChecks="on"   # set to 'on' for obtaining validator metrics
 additionalInfo="on"    # set to on for additional general metrics
 cli=""                 # auto detection of the solana cli can fail, in case insert like /path/solana
@@ -62,8 +63,8 @@ while true; do
     validatorBlockTime=$($cli block-time --url $rpcURL --output json-compact)
     validatorBlockTimeTest=$(echo $validatorBlockTime | grep -c "timestamp")
     if [ "$validatorChecks" == "on" ]; then
-	   validatorBlockProduction=$($cli block-production --url $rpcURL --output json-compact | jq -r '.leaders[] | select(.identityPubkey == '\"$identityPubkey\"')')
-	   validators=$($cli validators --url $rpcURL --output json-compact)
+       validatorBlockProduction=$($cli block-production --url $rpcURL --output json-compact | jq -r '.leaders[] | select(.identityPubkey == '\"$identityPubkey\"')')
+       validators=$($cli validators --url $rpcURL --output json-compact)
        currentValidatorInfo=$(jq -r '.currentValidators[] | select(.voteAccountPubkey == '\"$voteAccount\"')' <<<$validators)
        delinquentValidatorInfo=$(jq -r '.delinquentValidators[] | select(.voteAccountPubkey == '\"$voteAccount\"')' <<<$validators)
     fi
@@ -71,9 +72,10 @@ while true; do
         status="up"
         blockHeight=$(jq -r '.slot' <<<$validatorBlockTime)
         blockHeightTime=$(jq -r '.timestamp' <<<$validatorBlockTime)
+        avgBlockTime=$(echo "scale=2 ; $(expr $blockHeightTime - $($cli block-time --url $rpcURL --output json-compact $(expr $blockHeight - $slotinterval) | jq -r '.timestamp')) / $slotinterval" | bc)
         now=$(date --rfc-3339=$dateprecision)
         blockHeightFromNow=$(expr $(date +%s) - $blockHeightTime)
-        logentry="height=${blockHeight} tFromNow=${blockHeightFromNow}"
+        logentry="height=${blockHeight} tFromNow=${blockHeightFromNow} avgTime=${avgBlockTime}"
         if [ "$validatorChecks" == "on" ]; then
            if [ -n "$delinquentValidatorInfo" ]; then
               status=delinquent
@@ -101,11 +103,11 @@ while true; do
            totalActiveStake=$(jq -r '.totalActiveStake' <<<$validators)
            totalDeliquentStake=$(jq -r '.totalDeliquentStake' <<<$validators)
            pctTotDelinquent=$(echo "scale=2 ; 100 * $totalDeliquentStake / $totalActiveStake" | bc)
-		   validators=$($cli epoch-info --url $rpcURL --output json-compact)
-		   nodes=$($cli gossip | grep -Po "Nodes:\s+\K[0-9]+")
-		   epochInfo=$($cli epoch-info --url $rpcURL --output json-compact)
-		   epoch=$(jq -r '.epoch' <<<$epochInfo)
-		   pctEpochElapsed=$(echo "scale=2 ; 100 * $(jq -r '.slotIndex' <<<$epochInfo) / $(jq -r '.slotsInEpoch' <<<$epochInfo)" | bc)
+           validators=$($cli epoch-info --url $rpcURL --output json-compact)
+           nodes=$($cli gossip | grep -Po "Nodes:\s+\K[0-9]+")
+           epochInfo=$($cli epoch-info --url $rpcURL --output json-compact)
+           epoch=$(jq -r '.epoch' <<<$epochInfo)
+           pctEpochElapsed=$(echo "scale=2 ; 100 * $(jq -r '.slotIndex' <<<$epochInfo) / $(jq -r '.slotsInEpoch' <<<$epochInfo)" | bc)
            logentry="$logentry pctTotDelinquent=$pctTotDelinquent nodes=$nodes epoch=$epoch pctEpochElapsed=$pctEpochElapsed"	   
         fi
         logentry="[$now] status=$status $logentry"
@@ -115,10 +117,8 @@ while true; do
         logentry="[$now] status=error"
         echo "$logentry" >>$logfile
     fi
-
     nloglines=$(wc -l <$logfile)
     if [ $nloglines -gt $logsize ]; then sed -i '1d' $logfile; fi
-
     echo "$logentry"
     echo "sleep $sleep1"
     sleep $sleep1
