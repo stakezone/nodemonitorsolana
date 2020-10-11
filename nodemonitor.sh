@@ -5,15 +5,18 @@
 #####    CONFIG    ##################################################################################################
 configDir="$HOME/.config/solana/" # the directory for the config files, eg.: /home/user/.config/solana/
 ##### optional:        #
-voteAccount=""         # vote account address for the validator
-identityPubkey=""      # identity pubkey for validator, insert if auto-discovery fails
+sleep1=30s             # polls every sleep1 sec
+identityPubkey=""      # identity pubkey for the validator, insert if autodiscovery fails
+voteAccount=""         # vote account address for the validator, specify if there are more than one or if autodiscovery fails
 validatorChecks="on"   # set to 'on' for obtaining validator metrics
+additionalInfo="on"    # set to on for additional general metrics
 cli=""                 # auto detection of the solana cli can fail, in case insert like /path/solana
-rpcPort=""             # value of --rpc-port for solana-validator, insert if auto-discovery fails
+rpcURL=""              # default is localhost with port number autodiscovered, alternatively it can be specified like http://custom.rpc.com:port
+format="SOL"           # amounts shown in SOL instead of lamports
 logname=""             # a custom monitor log file name can be chosen, if left empty default is nodecheck-<username>.log
 logpath="$(pwd)"       # the directory where the log file is stored, for customization insert path like: /my/path
 logsize=200            # the max number of lines after that the log will be trimmed to reduce its size
-sleep1=30s             # polls every sleep1 sec
+dateprecision="seconds"      # precision for date format, can be seconds or ns (for nano seconds)
 #####  END CONFIG  ##################################################################################################
 
 
@@ -23,15 +26,16 @@ if [ -z  $installDir ]; then echo "please configure the cli manually or check th
 
 if [ -z  $cli ]; then cli="${installDir}/solana"; fi
 
-if [ -z $rpcPort ]; then rpcPort=$(ps aux | grep solana-validator | grep -Po "\-\-rpc\-port\s+\K[0-9]+"); fi
-if [ -z $rpcPort ]; then echo "auto-detection failed, please configure the rpcPort"; exit 1; fi
-rpcURL="http://127.0.0.1:$rpcPort"
+if [ -z $rpcURL ]; then
+   rpcPort=$(ps aux | grep solana-validator | grep -Po "\-\-rpc\-port\s+\K[0-9]+")
+   if [ -z $rpcPort ]; then echo "auto-detection failed, please configure the rpcURL"; exit 1; fi
+   rpcURL="http://127.0.0.1:$rpcPort"
+fi
 
-if [ -z $voteAccount ]; then voteAccount=$(ps aux | grep solana-validator | grep -Po "\-\-vote\-account\s+\K\w+"); fi
-if [ -z $voteAccount ]; then echo "please configure the vote account in the script"; exit 1; fi
-#if [ -z $identityPubkey ]; then identityPubkey=$(echo "a"$($cli validators --url $rpcURL | grep "$voteAccount") | awk '{print $2}'); fi #fix empty space with prefix 'a'
-if [ -z $identityPubkey ]; then identityPubkey=$($cli validators --url $rpcURL --output json-compact | jq -r '.currentValidators[] | select(.voteAccountPubkey == '\"$voteAccount\"') | .identityPubkey'); fi
+if [ -z $identityPubkey ]; then identityPubkey=$($cli address --url $rpcURL); fi
 if [ -z $identityPubkey ]; then echo "auto-detection failed, please configure the identityPubkey in the script"; exit 1; fi
+if [ -z $voteAccount ]; then voteAccount=$($cli validators --url $rpcURL --output json-compact | jq -r '.currentValidators[] | select(.identityPubkey == '\"$identityPubkey\"') | .voteAccountPubkey'); fi
+if [ -z $voteAccount ]; then echo "please configure the vote account in the script"; exit 1; fi
 
 if [ -z $logname ]; then logname="nodemonitor-${USER}.log"; fi
 logfile="${logpath}/${logname}"
@@ -50,23 +54,24 @@ if [ $(grep -c $voteAccount <<< $validatorCheck) == 0  ]; then echo "validator n
 nloglines=$(wc -l <$logfile)
 if [ $nloglines -gt $logsize ]; then sed -i "1,$(expr $nloglines - $logsize)d" $logfile; fi # the log file is trimmed for logsize
 
-date=$(date --rfc-3339=seconds)
+date=$(date --rfc-3339=$dateprecision)
 echo "[$date] status=scriptstarted" >>$logfile
 
 while true; do
-    validatorBlockTime=$($cli slot --commitment recent --url  $rpcURL | $cli block-time --url  $rpcURL --output json-compact)
+    #validatorBlockTime=$($cli slot --commitment recent --url  $rpcURL | $cli block-time --url  $rpcURL --output json-compact)
+    validatorBlockTime=$($cli block-time --url $rpcURL --output json-compact)
     validatorBlockTimeTest=$(echo $validatorBlockTime | grep -c "timestamp")
     if [ "$validatorChecks" == "on" ]; then
-      #validatorBlockProduction=$($cli block-production --url  $rpcURL | grep "$identityPubkey")
-       validatorBlockProduction=$($cli block-production --url $rpcURL --output json-compact | jq -r '.leaders[] | select(.identityPubkey == '\"$identityPubkey\"')')
-       currentValidatorInfo=$($cli validators --url $rpcURL --output json-compact | jq -r '.currentValidators[] | select(.voteAccountPubkey == '\"$voteAccount\"')')
-       delinquentValidatorInfo=$($cli validators --url $rpcURL --output json-compact | jq -r '.delinquentValidators[] | select(.voteAccountPubkey == '\"$voteAccount\"')')
+	   validatorBlockProduction=$($cli block-production --url $rpcURL --output json-compact | jq -r '.leaders[] | select(.identityPubkey == '\"$identityPubkey\"')')
+	   validators=$($cli validators --url $rpcURL --output json-compact)
+       currentValidatorInfo=$(jq -r '.currentValidators[] | select(.voteAccountPubkey == '\"$voteAccount\"')' <<<$validators)
+       delinquentValidatorInfo=$(jq -r '.delinquentValidators[] | select(.voteAccountPubkey == '\"$voteAccount\"')' <<<$validators)
     fi
     if [[ ((-n "$currentValidatorInfo" || "$delinquentValidatorInfo" ) && "$validatorChecks" == "on")  ]] || [[ ("$validatorBlockTimeTest" -eq "1" && "$validatorChecks" != "on") ]]; then
         status="up"
         blockHeight=$(jq -r '.slot' <<<$validatorBlockTime)
         blockHeightTime=$(jq -r '.timestamp' <<<$validatorBlockTime)
-        now=$(date --rfc-3339=seconds)
+        now=$(date --rfc-3339=$dateprecision)
         blockHeightFromNow=$(expr $(date +%s) - $blockHeightTime)
         logentry="height=${blockHeight} tFromNow=${blockHeightFromNow}"
         if [ "$validatorChecks" == "on" ]; then
@@ -86,16 +91,27 @@ while true; do
               logentry="$logentry lastVote=$(jq -r '.lastVote' <<<$currentValidatorInfo) rootSlot=$(jq -r '.rootSlot' <<<$currentValidatorInfo)"
               leaderSlots=$(jq -r '.leaderSlots' <<<$validatorBlockProduction)
               skippedSlots=$(jq -r '.skippedSlots' <<<$validatorBlockProduction)
-              activatedStake=$(echo "scale=2 ; $activatedStake / 1.0" | bc)
+              if [ "$format" == "SOL" ]; then activatedStake=$(echo "scale=2 ; $activatedStake / 1000000000.0" | bc); fi
               if [ -n "$leaderSlots" ]; then pctSkipped=$(echo "scale=2 ; 100 * $skippedSlots / $leaderSlots" | bc); fi
               logentry="$logentry leaderSlots=$leaderSlots skippedSlots=$skippedSlots pctSkipped=$pctSkipped"
               logentry="$logentry credits=$credits activatedStake=$activatedStake version=$version commission=$commission"
            else status=error; fi
         fi
+        if [ "$additionalInfo" == "on" ]; then
+           totalActiveStake=$(jq -r '.totalActiveStake' <<<$validators)
+           totalDeliquentStake=$(jq -r '.totalDeliquentStake' <<<$validators)
+           pctTotDelinquent=$(echo "scale=2 ; 100 * $totalDeliquentStake / $totalActiveStake" | bc)
+		   validators=$($cli epoch-info --url $rpcURL --output json-compact)
+		   nodes=$($cli gossip | grep -Po "Nodes:\s+\K[0-9]+")
+		   epochInfo=$($cli epoch-info --url $rpcURL --output json-compact)
+		   epoch=$(jq -r '.epoch' <<<$epochInfo)
+		   epochPctElapsed=$(echo "scale=2 ; 100 * $(jq -r '.slotIndex' <<<$epochInfo) / $(jq -r '.slotsInEpoch' <<<$epochInfo)" | bc)
+           logentry="$logentry pctTotDelinquent=$pctTotDelinquent nodes=$nodes epoch=$epoch epochPctElapsed=$epochPctElapsed"	   
+        fi
         logentry="[$now] status=$status $logentry"
         echo "$logentry" >>$logfile
     else
-        now=$(date --rfc-3339=seconds)
+        now=$(date --rfc-3339=$dateprecision)
         logentry="[$now] status=error"
         echo "$logentry" >>$logfile
     fi
