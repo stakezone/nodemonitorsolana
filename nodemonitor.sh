@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#####    Packages required: jq,bc
+#####    Packages required: jq, bc
 
 #####    CONFIG    ##################################################################################################
 configDir="$HOME/.config/solana/" # the directory for the config files, eg.: /home/user/.config/solana/
@@ -101,8 +101,8 @@ while true; do
         fi
         if [ "$additionalInfo" == "on" ]; then
            totalActiveStake=$(jq -r '.totalActiveStake' <<<$validators)
-           totalDeliquentStake=$(jq -r '.totalDeliquentStake' <<<$validators)
-           pctTotDelinquent=$(echo "scale=2 ; 100 * $totalDeliquentStake / $totalActiveStake" | bc)
+           totalDelinquentStake=$(jq -r '.totalDelinquentStake' <<<$validators)
+           pctTotDelinquent=$(echo "scale=2 ; 100 * $totalDelinquentStake / $totalActiveStake" | bc)
            validators=$($cli epoch-info --url $rpcURL --output json-compact)
            nodes=$($cli gossip | grep -Po "Nodes:\s+\K[0-9]+")
            epochInfo=$($cli epoch-info --url $rpcURL --output json-compact)
