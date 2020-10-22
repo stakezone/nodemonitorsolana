@@ -63,7 +63,8 @@ while true; do
     validatorBlockTime=$($cli block-time --url $rpcURL --output json-compact)
     validatorBlockTimeTest=$(echo $validatorBlockTime | grep -c "timestamp")
     if [ "$validatorChecks" == "on" ]; then
-       validatorBlockProduction=$($cli block-production --url $rpcURL --output json-compact | jq -r '.leaders[] | select(.identityPubkey == '\"$identityPubkey\"')')
+       blockProduction=$($cli block-production --url $rpcURL --output json-compact)
+       validatorBlockProduction=$(jq -r '.leaders[] | select(.identityPubkey == '\"$identityPubkey\"')' <<<$blockProduction)
        validators=$($cli validators --url $rpcURL --output json-compact)
        currentValidatorInfo=$(jq -r '.currentValidators[] | select(.voteAccountPubkey == '\"$voteAccount\"')' <<<$validators)
        delinquentValidatorInfo=$(jq -r '.delinquentValidators[] | select(.voteAccountPubkey == '\"$voteAccount\"')' <<<$validators)
@@ -93,9 +94,12 @@ while true; do
               logentry="$logentry lastVote=$(jq -r '.lastVote' <<<$currentValidatorInfo) rootSlot=$(jq -r '.rootSlot' <<<$currentValidatorInfo)"
               leaderSlots=$(jq -r '.leaderSlots' <<<$validatorBlockProduction)
               skippedSlots=$(jq -r '.skippedSlots' <<<$validatorBlockProduction)
+              totalBlocksProduced=$(jq -r '.total_blocks_produced' <<<$blockProduction)
+              totalSlotsSkipped=$(jq -r '.total_slots_skipped' <<<$blockProduction)
               if [ "$format" == "SOL" ]; then activatedStake=$(echo "scale=2 ; $activatedStake / 1000000000.0" | bc); fi
               if [ -n "$leaderSlots" ]; then pctSkipped=$(echo "scale=2 ; 100 * $skippedSlots / $leaderSlots" | bc); fi
-              logentry="$logentry leaderSlots=$leaderSlots skippedSlots=$skippedSlots pctSkipped=$pctSkipped"
+              if [ -n "$totalBlocksProduced" ]; then pctTotSkipped=$(echo "scale=2 ; 100 * $totalSlotsSkipped / $totalBlocksProduced" | bc); fi
+              logentry="$logentry leaderSlots=$leaderSlots skippedSlots=$skippedSlots pctSkipped=$pctSkipped pctTotSkipped=$pctTotSkipped"
               logentry="$logentry credits=$credits activatedStake=$activatedStake version=$version commission=$commission"
            else status=error; fi
         fi
@@ -108,7 +112,7 @@ while true; do
            epochInfo=$($cli epoch-info --url $rpcURL --output json-compact)
            epoch=$(jq -r '.epoch' <<<$epochInfo)
            pctEpochElapsed=$(echo "scale=2 ; 100 * $(jq -r '.slotIndex' <<<$epochInfo) / $(jq -r '.slotsInEpoch' <<<$epochInfo)" | bc)
-           logentry="$logentry pctTotDelinquent=$pctTotDelinquent nodes=$nodes epoch=$epoch pctEpochElapsed=$pctEpochElapsed"	   
+           logentry="$logentry pctTotDelinquent=$pctTotDelinquent nodes=$nodes epoch=$epoch pctEpochElapsed=$pctEpochElapsed"
         fi
         logentry="[$now] status=$status $logentry"
         echo "$logentry" >>$logfile
