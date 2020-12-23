@@ -1,4 +1,7 @@
 # nodemonitorsolana
+
+Template not yet updated for all new metrics...
+
 A complete log file based Solana validator up-time monitoring solution for Zabbix. It consists of the shell script nodemonitor.sh for generating log files on the host and the template zbx_5_template_nodemonitorsolana.xml for the Zabbix 5.0 server.
 
 ### Concept
