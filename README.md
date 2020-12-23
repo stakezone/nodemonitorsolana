@@ -6,7 +6,7 @@ A complete log file based Solana validator up-time monitoring solution for Zabbi
 nodemonitor.sh generates human-readable logs that look like:
 
 `
-[2020-12-22 19:31:00-05:00] status=validating height=56835798 tFromNow=27 avgTime= lastVote=56835847 rootSlot=56835796 leaderSlots=1164 skippedSlots=565 pctSkipped=48.53 pctTotSkipped=33.14 pctSkippedDerivation=46.43 credits=49156695 activatedStake=701168.05 version=1.4.17 commission=0 pctTotDelinquent=4.15 pctVersionActive=84.83 nodes=494 epoch=131 pctEpochElapsed=56.44`
+[2020-12-22 19:31:00-05:00] status=validating height=56835798 tFromNow=27 avgTime=.49 lastVote=56835847 rootSlot=56835796 leaderSlots=1164 skippedSlots=565 pctSkipped=48.53 pctTotSkipped=33.14 pctSkippedDerivation=46.43 credits=49156695 activatedStake=701168.05 version=1.4.17 commission=0 pctTotDelinquent=4.15 pctVersionActive=84.83 nodes=494 epoch=131 pctEpochElapsed=56.44`
  
 `
 [2020-12-22 19:32:10-05:00] status=validating height=56835910 tFromNow=45 avgTime=.46 lastVote=56835997 rootSlot=56835905 leaderSlots=1164 skippedSlots=565 pctSkipped=48.53 pctTotSkipped=33.14 pctSkippedDerivation=46.43 credits=49156771 activatedStake=701168.05 version=1.4.17 commission=0 pctTotDelinquent=4.15 pctVersionActive=84.83 nodes=497 epoch=131 pctEpochElapsed=56.48`
