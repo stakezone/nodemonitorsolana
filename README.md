@@ -9,13 +9,13 @@ A complete log file based Solana validator up-time monitoring solution for Zabbi
 nodemonitor.sh generates human-readable logs that look like:
 
 `
-[2020-12-23 17:29:00-05:00] status=validating height=54509289 tFromNow=5687043 avgTime=.50 lastVote=54509353 rootSlot=54509295 leaderSlots=912 skippedSlots=189 pctSkipped=20.72 pctTotSkipped=19.94 pctSkippedDerivation=3.91 credits=14229146 activatedStake=57203.20 version=1.4.19 commission=100 pctTotDelinquent=2.80 pctNewerVersions=0 nodes=492 epoch=138 pctEpochElapsed=96.55`
+[2020-12-23 17:29:00-05:00] status=validating height=54509289 tFromNow=25 avgTime=.50 lastVote=54509353 rootSlot=54509295 leaderSlots=912 skippedSlots=189 pctSkipped=20.72 pctTotSkipped=19.94 pctSkippedDerivation=3.91 credits=14229146 activatedStake=57203.20 version=1.4.19 commission=100 pctTotDelinquent=2.80 pctNewerVersions=0 nodes=492 epoch=138 pctEpochElapsed=96.55`
  
 `
-[2020-12-23 17:30:07-05:00] status=validating height=54509468 tFromNow=5687021 avgTime=.47 lastVote=54509516 rootSlot=54509473 leaderSlots=912 skippedSlots=189 pctSkipped=20.72 pctTotSkipped=19.94 pctSkippedDerivation=3.91 credits=14229263 activatedStake=57203.20 version=1.4.19 commission=100 pctTotDelinquent=3.01 pctNewerVersions=0 nodes=492 epoch=138 pctEpochElapsed=96.58`
+[2020-12-23 17:30:07-05:00] status=validating height=54509468 tFromNow=28 avgTime=.47 lastVote=54509516 rootSlot=54509473 leaderSlots=912 skippedSlots=189 pctSkipped=20.72 pctTotSkipped=19.94 pctSkippedDerivation=3.91 credits=14229263 activatedStake=57203.20 version=1.4.19 commission=100 pctTotDelinquent=3.01 pctNewerVersions=0 nodes=492 epoch=138 pctEpochElapsed=96.58`
  
 `
-[2020-12-23 17:31:13-05:00] status=validating height=54509627 tFromNow=5687007 avgTime=.50 lastVote=54509668 rootSlot=54509631 leaderSlots=912 skippedSlots=189 pctSkipped=20.72 pctTotSkipped=19.94 pctSkippedDerivation=3.91 credits=14229368 activatedStake=57203.20 version=1.4.19 commission=100 pctTotDelinquent=3.01 pctNewerVersions=0 nodes=490 epoch=138 pctEpochElapsed=96.62`
+[2020-12-23 17:31:13-05:00] status=validating height=54509627 tFromNow=28 avgTime=.50 lastVote=54509668 rootSlot=54509631 leaderSlots=912 skippedSlots=189 pctSkipped=20.72 pctTotSkipped=19.94 pctSkippedDerivation=3.91 credits=14229368 activatedStake=57203.20 version=1.4.19 commission=100 pctTotDelinquent=3.01 pctNewerVersions=0 nodes=490 epoch=138 pctEpochElapsed=96.62`
 
 For the Zabbix server there is a log module for analyzing log data. The log line entries that are used by the server are:
 
