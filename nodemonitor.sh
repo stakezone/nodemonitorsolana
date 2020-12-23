@@ -81,6 +81,7 @@ while true; do
            if [ -n "$delinquentValidatorInfo" ]; then
               status=delinquent
               activatedStake=$(jq -r '.activatedStake' <<<$delinquentValidatorInfo)
+              activatedStakeDisplay=$activatedStake
               credits=$(jq -r '.credits' <<<$delinquentValidatorInfo)
               version=$(jq -r '.version' <<<$delinquentValidatorInfo | sed 's/ /-/g')
               commission=$(jq -r '.commission' <<<$delinquentValidatorInfo)
@@ -88,31 +89,39 @@ while true; do
            elif [ -n "$currentValidatorInfo" ]; then
               status=validating
               activatedStake=$(jq -r '.activatedStake' <<<$currentValidatorInfo)
+              activatedStakeDisplay=$activatedStake
               credits=$(jq -r '.credits' <<<$currentValidatorInfo)
               version=$(jq -r '.version' <<<$currentValidatorInfo | sed 's/ /-/g')
               commission=$(jq -r '.commission' <<<$currentValidatorInfo)
               logentry="$logentry lastVote=$(jq -r '.lastVote' <<<$currentValidatorInfo) rootSlot=$(jq -r '.rootSlot' <<<$currentValidatorInfo)"
               leaderSlots=$(jq -r '.leaderSlots' <<<$validatorBlockProduction)
               skippedSlots=$(jq -r '.skippedSlots' <<<$validatorBlockProduction)
-              totalBlocksProduced=$(jq -r '.total_blocks_produced' <<<$blockProduction)
+              #totalBlocksProduced=$(jq -r '.total_blocks_produced' <<<$blockProduction)
+              totalBlocksProduced=$(jq -r '.total_slots' <<<$blockProduction)
               totalSlotsSkipped=$(jq -r '.total_slots_skipped' <<<$blockProduction)
-              if [ "$format" == "SOL" ]; then activatedStake=$(echo "scale=2 ; $activatedStake / 1000000000.0" | bc); fi
+              if [ "$format" == "SOL" ]; then activatedStakeDisplay=$(echo "scale=2 ; $activatedStake / 1000000000.0" | bc); fi
               if [ -n "$leaderSlots" ]; then pctSkipped=$(echo "scale=2 ; 100 * $skippedSlots / $leaderSlots" | bc); fi
-              if [ -n "$totalBlocksProduced" ]; then pctTotSkipped=$(echo "scale=2 ; 100 * $totalSlotsSkipped / $totalBlocksProduced" | bc); fi
-              logentry="$logentry leaderSlots=$leaderSlots skippedSlots=$skippedSlots pctSkipped=$pctSkipped pctTotSkipped=$pctTotSkipped"
-              logentry="$logentry credits=$credits activatedStake=$activatedStake version=$version commission=$commission"
+              if [ -n "$totalBlocksProduced" ]; then
+                 pctTotSkipped=$(echo "scale=2 ; 100 * $totalSlotsSkipped / $totalBlocksProduced" | bc)
+                 pctSkippedDerivation=$(echo "scale=2 ; 100 * ($pctSkipped - $pctTotSkipped) / $pctTotSkipped" | bc)
+              fi
+              logentry="$logentry leaderSlots=$leaderSlots skippedSlots=$skippedSlots pctSkipped=$pctSkipped pctTotSkipped=$pctTotSkipped pctSkippedDerivation=$pctSkippedDerivation"
+              logentry="$logentry credits=$credits activatedStake=$activatedStakeDisplay version=$version commission=$commission"
            else status=error; fi
         fi
         if [ "$additionalInfo" == "on" ]; then
            totalActiveStake=$(jq -r '.totalActiveStake' <<<$validators)
            totalDelinquentStake=$(jq -r '.totalDelinquentStake' <<<$validators)
            pctTotDelinquent=$(echo "scale=2 ; 100 * $totalDelinquentStake / $totalActiveStake" | bc)
-           validators=$($cli epoch-info --url $rpcURL --output json-compact)
+           #validators=$($cli epoch-info --url $rpcURL --output json-compact)
+           versionActiveStake=$(jq -r '.stakeByVersion.'\"$version\"'.currentActiveStake' <<<$validators)
+           totalCurrentStake=$(jq -r '.totalCurrentStake' <<<$validators)
+           pctVersionActive=$(echo "scale=2 ; 100 * $versionActiveStake / $totalCurrentStake" | bc)
            nodes=$($cli gossip | grep -Po "Nodes:\s+\K[0-9]+")
            epochInfo=$($cli epoch-info --url $rpcURL --output json-compact)
            epoch=$(jq -r '.epoch' <<<$epochInfo)
            pctEpochElapsed=$(echo "scale=2 ; 100 * $(jq -r '.slotIndex' <<<$epochInfo) / $(jq -r '.slotsInEpoch' <<<$epochInfo)" | bc)
-           logentry="$logentry pctTotDelinquent=$pctTotDelinquent nodes=$nodes epoch=$epoch pctEpochElapsed=$pctEpochElapsed"
+           logentry="$logentry pctTotDelinquent=$pctTotDelinquent pctVersionActive=$pctVersionActive nodes=$nodes epoch=$epoch pctEpochElapsed=$pctEpochElapsed"
         fi
         logentry="[$now] status=$status $logentry"
         echo "$logentry" >>$logfile
