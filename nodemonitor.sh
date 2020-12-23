@@ -7,7 +7,7 @@ configDir="$HOME/.config/solana/" # the directory for the config files, eg.: /ho
 ##### optional:        #
 identityPubkey=""      # identity pubkey for the validator, insert if autodiscovery fails
 voteAccount=""         # vote account address for the validator, specify if there are more than one or if autodiscovery fails
-sleep1=30s             # polls every sleep1 sec
+sleep1=1m              # polls every sleep1 time interval
 slotinterval="100"     # interval of slots for calculating average slot time
 validatorChecks="on"   # set to 'on' for obtaining validator metrics
 additionalInfo="on"    # set to on for additional general metrics
@@ -114,14 +114,20 @@ while true; do
            totalDelinquentStake=$(jq -r '.totalDelinquentStake' <<<$validators)
            pctTotDelinquent=$(echo "scale=2 ; 100 * $totalDelinquentStake / $totalActiveStake" | bc)
            #validators=$($cli epoch-info --url $rpcURL --output json-compact)
-           versionActiveStake=$(jq -r '.stakeByVersion.'\"$version\"'.currentActiveStake' <<<$validators)
+           #versionActiveStake=$(jq -r '.stakeByVersion.'\"$version\"'.currentActiveStake' <<<$validators)
+           stakeByVersion=$(jq -r '.stakeByVersion' <<<$validators)
+           stakeByVersion=$(jq -r 'to_entries | map_values(.value + { version: .key })' <<<$stakeByVersion)
+           nextVersionIndex=$(expr $(jq -r 'map(.version == '\"$version\"') | index(true)' <<<$stakeByVersion) + 1)
+           stakeByVersion=$(jq '.['$nextVersionIndex':]' <<<$stakeByVersion)
+           stakeNewerVersions=$(jq -s 'map(.[].currentActiveStake) | add' <<<$stakeByVersion)
            totalCurrentStake=$(jq -r '.totalCurrentStake' <<<$validators)
-           pctVersionActive=$(echo "scale=2 ; 100 * $versionActiveStake / $totalCurrentStake" | bc)
+           #pctVersionActive=$(echo "scale=2 ; 100 * $versionActiveStake / $totalCurrentStake" | bc)
+           pctNewerVersions=$(echo "scale=2 ; 100 * $stakeNewerVersions / $totalCurrentStake" | bc)
            nodes=$($cli gossip | grep -Po "Nodes:\s+\K[0-9]+")
            epochInfo=$($cli epoch-info --url $rpcURL --output json-compact)
            epoch=$(jq -r '.epoch' <<<$epochInfo)
            pctEpochElapsed=$(echo "scale=2 ; 100 * $(jq -r '.slotIndex' <<<$epochInfo) / $(jq -r '.slotsInEpoch' <<<$epochInfo)" | bc)
-           logentry="$logentry pctTotDelinquent=$pctTotDelinquent pctVersionActive=$pctVersionActive nodes=$nodes epoch=$epoch pctEpochElapsed=$pctEpochElapsed"
+           logentry="$logentry pctTotDelinquent=$pctTotDelinquent pctNewerVersions=$pctNewerVersions nodes=$nodes epoch=$epoch pctEpochElapsed=$pctEpochElapsed"
         fi
         logentry="[$now] status=$status $logentry"
         echo "$logentry" >>$logfile
