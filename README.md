@@ -28,7 +28,6 @@ For the Zabbix server there is a log module for analyzing log data. The log line
 * **pctSkippedDerivation** derivation in percentage of pctSkipped from pctTotSkipped, can be negative (how the node performs in relation to the average)
 * **leaderSlots** number of leader slots
 * **pctTotDelinquent** percentage of delinquent nodes for the validator set (if high some general problem is likely)
-* **version** version number of the node
 * **pctNewerVersions** percentage of nodes with newer version than this node based on stake (detects need for updating software)
 
 ### Installation
