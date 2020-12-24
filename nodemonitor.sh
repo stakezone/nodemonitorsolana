@@ -7,8 +7,8 @@ configDir="$HOME/.config/solana/" # the directory for the config files, eg.: /ho
 ##### optional:        #
 identityPubkey=""      # identity pubkey for the validator, insert if autodiscovery fails
 voteAccount=""         # vote account address for the validator, specify if there are more than one or if autodiscovery fails
-sleep1=30s             # polls every sleep1 sec
-slotinterval="100"     # interval of slots for calculating average slot time
+sleep1=30             # polls every sleep1 sec, please use a value in seconds in order to enable proper interval calculation
+slotinterval="$(expr 4 \* $sleep1)"     # interval of slots for calculating average slot time
 validatorChecks="on"   # set to 'on' for obtaining validator metrics
 additionalInfo="on"    # set to on for additional general metrics
 cli=""                 # auto detection of the solana cli can fail or a custom installation is preferred, in case insert like /path/solana
@@ -103,9 +103,9 @@ while true; do
               if [ -n "$leaderSlots" ]; then pctSkipped=$(echo "scale=2 ; 100 * $skippedSlots / $leaderSlots" | bc); fi
               if [ -n "$totalBlocksProduced" ]; then
                  pctTotSkipped=$(echo "scale=2 ; 100 * $totalSlotsSkipped / $totalBlocksProduced" | bc)
-                 pctSkippedDerivation=$(echo "scale=2 ; 100 * ($pctSkipped - $pctTotSkipped) / $pctTotSkipped" | bc)
+                 pctSkippedAvgDeriv=$(echo "scale=2 ; 100 * ($pctSkipped - $pctTotSkipped) / $pctTotSkipped" | bc)
               fi
-              logentry="$logentry leaderSlots=$leaderSlots skippedSlots=$skippedSlots pctSkipped=$pctSkipped pctTotSkipped=$pctTotSkipped pctSkippedDerivation=$pctSkippedDerivation"
+              logentry="$logentry leaderSlots=$leaderSlots skippedSlots=$skippedSlots pctSkipped=$pctSkipped pctTotSkipped=$pctTotSkipped pctSkippedAvgDeriv=$pctSkippedAvgDeriv"
               logentry="$logentry credits=$credits activatedStake=$activatedStakeDisplay version=$version commission=$commission"
            else status=error; fi
         fi
@@ -124,7 +124,7 @@ while true; do
            pctNewerVersions=$(echo "scale=2 ; 100 * $stakeNewerVersions / $totalCurrentStake" | bc)
            slotIntervalTime=$($cli block-time --url $rpcURL --output json-compact $(expr $blockHeight - $slotinterval) | jq -r '.timestamp')
            avgSlotTime=""
-           if [[ -n "$slotIntervalTime"] && -n ["$blockHeightTime" ]]; then avgSlotTime=$(echo "scale=2 ; ($blockHeightTime - $slotIntervalTime) / $slotinterval" | bc); fi
+           if [[ -n "$slotIntervalTime" && -n "$blockHeightTime" ]]; then avgSlotTime=$(echo "scale=2 ; ($blockHeightTime - $slotIntervalTime) / $slotinterval" | bc); fi
            nodes=$($cli gossip --url $rpcURL | grep -Po "Nodes:\s+\K[0-9]+")
            epochInfo=$($cli epoch-info --url $rpcURL --output json-compact)
            epoch=$(jq -r '.epoch' <<<$epochInfo)
