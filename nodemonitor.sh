@@ -49,7 +49,7 @@ echo "identity pubkey: ${identityPubkey}"
 echo "vote account: ${voteAccount}"
 echo ""
 
-validatorCheck=$($cli validators)
+validatorCheck=$($cli validators --url $rpcURL)
 if [ $(grep -c $voteAccount <<< $validatorCheck) == 0  ]; then echo "validator not found in set"; exit 1; fi
 
 nloglines=$(wc -l <$logfile)
@@ -103,9 +103,9 @@ while true; do
               if [ -n "$leaderSlots" ]; then pctSkipped=$(echo "scale=2 ; 100 * $skippedSlots / $leaderSlots" | bc); fi
               if [ -n "$totalBlocksProduced" ]; then
                  pctTotSkipped=$(echo "scale=2 ; 100 * $totalSlotsSkipped / $totalBlocksProduced" | bc)
-                 pctSkippedDerivation=$(echo "scale=2 ; 100 * ($pctSkipped - $pctTotSkipped) / $pctTotSkipped" | bc)
+                 pctSkippedAvgDeriv=$(echo "scale=2 ; 100 * ($pctSkipped - $pctTotSkipped) / $pctTotSkipped" | bc)
               fi
-              logentry="$logentry leaderSlots=$leaderSlots skippedSlots=$skippedSlots pctSkipped=$pctSkipped pctTotSkipped=$pctTotSkipped pctSkippedDerivation=$pctSkippedDerivation"
+              logentry="$logentry leaderSlots=$leaderSlots skippedSlots=$skippedSlots pctSkipped=$pctSkipped pctTotSkipped=$pctTotSkipped pctSkippedAvgDeriv=$pctSkippedAvgDeriv"
               logentry="$logentry credits=$credits activatedStake=$activatedStakeDisplay version=$version commission=$commission"
            else status=error; fi
         fi
@@ -124,8 +124,8 @@ while true; do
            pctNewerVersions=$(echo "scale=2 ; 100 * $stakeNewerVersions / $totalCurrentStake" | bc)
            slotIntervalTime=$($cli block-time --url $rpcURL --output json-compact $(expr $blockHeight - $slotinterval) | jq -r '.timestamp')
            avgSlotTime=""
-           if [ -n "$slotIntervalTime" ]; then avgSlotTime=$(echo "scale=2 ; ($blockHeightTime - $slotIntervalTime) / $slotinterval" | bc); fi
-           nodes=$($cli gossip | grep -Po "Nodes:\s+\K[0-9]+")
+           if [[ -n "$slotIntervalTime" && -n "$blockHeightTime" ]]; then avgSlotTime=$(echo "scale=2 ; ($blockHeightTime - $slotIntervalTime) / $slotinterval" | bc); fi
+           nodes=$($cli gossip --url $rpcURL | grep -Po "Nodes:\s+\K[0-9]+")
            epochInfo=$($cli epoch-info --url $rpcURL --output json-compact)
            epoch=$(jq -r '.epoch' <<<$epochInfo)
            pctEpochElapsed=$(echo "scale=2 ; 100 * $(jq -r '.slotIndex' <<<$epochInfo) / $(jq -r '.slotsInEpoch' <<<$epochInfo)" | bc)
