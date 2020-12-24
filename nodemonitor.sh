@@ -7,16 +7,16 @@ configDir="$HOME/.config/solana/" # the directory for the config files, eg.: /ho
 ##### optional:        #
 identityPubkey=""      # identity pubkey for the validator, insert if autodiscovery fails
 voteAccount=""         # vote account address for the validator, specify if there are more than one or if autodiscovery fails
-sleep1=1m              # polls every sleep1 time interval
+sleep1=30s             # polls every sleep1 sec
 slotinterval="100"     # interval of slots for calculating average slot time
 validatorChecks="on"   # set to 'on' for obtaining validator metrics
 additionalInfo="on"    # set to on for additional general metrics
-cli=""                 # auto detection of the solana cli can fail, in case insert like /path/solana
+cli=""                 # auto detection of the solana cli can fail or a custom installation is preferred, in case insert like /path/solana
 rpcURL=""              # default is localhost with port number autodiscovered, alternatively it can be specified like http://custom.rpc.com:port
 format="SOL"           # amounts shown in SOL instead of lamports
 logname=""             # a custom monitor log file name can be chosen, if left empty default is nodecheck-<username>.log
 logpath="$(pwd)"       # the directory where the log file is stored, for customization insert path like: /my/path
-logsize=200            # the max number of lines after that the log will be trimmed to reduce its size
+logsize=200            # the max number of lines after that the log gets truncated to reduce its size
 dateprecision="seconds"      # precision for date format, can be seconds or ns (for nano seconds)
 #####  END CONFIG  ##################################################################################################
 
@@ -73,10 +73,10 @@ while true; do
         status="up"
         blockHeight=$(jq -r '.slot' <<<$validatorBlockTime)
         blockHeightTime=$(jq -r '.timestamp' <<<$validatorBlockTime)
-        avgBlockTime=$(echo "scale=2 ; $(expr $blockHeightTime - $($cli block-time --url $rpcURL --output json-compact $(expr $blockHeight - $slotinterval) | jq -r '.timestamp')) / $slotinterval" | bc)
+        #avgBlockTime=$(echo "scale=2 ; $(expr $blockHeightTime - $($cli block-time --url $rpcURL --output json-compact $(expr $blockHeight - $slotinterval) | jq -r '.timestamp')) / $slotinterval" | bc)
         now=$(date --rfc-3339=$dateprecision)
         blockHeightFromNow=$(expr $(date +%s) - $blockHeightTime)
-        logentry="height=${blockHeight} tFromNow=${blockHeightFromNow} avgTime=${avgBlockTime}"
+        logentry="height=${blockHeight} tFromNow=${blockHeightFromNow}"
         if [ "$validatorChecks" == "on" ]; then
            if [ -n "$delinquentValidatorInfo" ]; then
               status=delinquent
@@ -113,7 +113,6 @@ while true; do
            totalActiveStake=$(jq -r '.totalActiveStake' <<<$validators)
            totalDelinquentStake=$(jq -r '.totalDelinquentStake' <<<$validators)
            pctTotDelinquent=$(echo "scale=2 ; 100 * $totalDelinquentStake / $totalActiveStake" | bc)
-           #validators=$($cli epoch-info --url $rpcURL --output json-compact)
            #versionActiveStake=$(jq -r '.stakeByVersion.'\"$version\"'.currentActiveStake' <<<$validators)
            stakeByVersion=$(jq -r '.stakeByVersion' <<<$validators)
            stakeByVersion=$(jq -r 'to_entries | map_values(.value + { version: .key })' <<<$stakeByVersion)
@@ -123,11 +122,13 @@ while true; do
            totalCurrentStake=$(jq -r '.totalCurrentStake' <<<$validators)
            #pctVersionActive=$(echo "scale=2 ; 100 * $versionActiveStake / $totalCurrentStake" | bc)
            pctNewerVersions=$(echo "scale=2 ; 100 * $stakeNewerVersions / $totalCurrentStake" | bc)
+           slotIntervalTime=$($cli block-time --url $rpcURL --output json-compact $(expr $blockHeight - $slotinterval) | jq -r '.timestamp')
+           if [ -n "$slotIntervalTime" ]; then avgSlotTime=$(echo "scale=2 ; ($blockHeightTime - $slotIntervalTime) / $slotinterval" | bc); fi
            nodes=$($cli gossip | grep -Po "Nodes:\s+\K[0-9]+")
            epochInfo=$($cli epoch-info --url $rpcURL --output json-compact)
            epoch=$(jq -r '.epoch' <<<$epochInfo)
            pctEpochElapsed=$(echo "scale=2 ; 100 * $(jq -r '.slotIndex' <<<$epochInfo) / $(jq -r '.slotsInEpoch' <<<$epochInfo)" | bc)
-           logentry="$logentry pctTotDelinquent=$pctTotDelinquent pctNewerVersions=$pctNewerVersions nodes=$nodes epoch=$epoch pctEpochElapsed=$pctEpochElapsed"
+           logentry="$logentry pctTotDelinquent=$pctTotDelinquent pctNewerVersions=$pctNewerVersions avgSlotTime=$avgSlotTime nodes=$nodes epoch=$epoch pctEpochElapsed=$pctEpochElapsed"
         fi
         logentry="[$now] status=$status $logentry"
         echo "$logentry" >>$logfile
