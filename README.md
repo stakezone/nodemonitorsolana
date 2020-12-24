@@ -20,8 +20,7 @@ nodemonitor.sh generates human-readable logs that look like:
 For the Zabbix server there is a log module for analyzing log data. The log line entries that are used by the server are:
 
 * **status** can be {scriptstarted | error | delinquent | validating | up} 'error' can have various causes, typically the `solana-validator` process is down. 'up' means the node is confirmed running when the validator metrics are turned off.
-* **tFromNow** time in seconds since recent block height (used for chain halt detection)
-* **avgTime**  average slot time for interval as configured 
+* **tFromNow** time in seconds since recent block height (used for chain halt detection) 
 * **pctSkipped** percentage of skipped leader slots
 * **leaderSlots** number of leader slots
 * **pctTotSkipped** percentage of total skipped leader slots for the validator set 
@@ -29,6 +28,8 @@ For the Zabbix server there is a log module for analyzing log data. The log line
 * **activatedStake** the activated stake of this node
 * **pctTotDelinquent** percentage of delinquent nodes for the validator set (if high some general problem is likely)
 * **pctNewerVersions** percentage of nodes with newer version than this node based on stake (detects need for updating software)
+* **nodes**  the number of nodes
+* **avgSlotTime**  average slot time for interval as configured
 
 ### Installation
 
@@ -43,4 +44,4 @@ More useful modules for GPU and SMART monitoring are available from the Zabbix s
 
 The Zabbix server is low on resources and a small size VPS is sufficient. However, lags can occur with the log file module. Performance problems with the server are mostly caused by the underlying database slowing down the processing. Database tuning might improve on the issues as well as changing the default Zabbix server parameters for caching etc.
 
-Getting the timestamp from the `solana block-time` sometime fails, however it does not affect the purpose of up-time monitoring. Occasionally no `avgTime` value can be calculated.
+Getting the timestamp from the `solana block-time` sometime fails causing a block not found error, however it does not affect the purpose of up-time monitoring. Occasionally no `avgSlotTime` value can be calculated.
