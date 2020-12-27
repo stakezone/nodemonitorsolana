@@ -7,7 +7,7 @@ configDir="$HOME/.config/solana" # the directory for the config files, eg.: /hom
 ##### optional:        #
 identityPubkey=""      # identity pubkey for the validator, insert if autodiscovery fails
 voteAccount=""         # vote account address for the validator, specify if there are more than one or if autodiscovery fails
-sleep1=60              # polls every sleep1 sec, please use a number value for seconds in order to enable proper interval calculation
+sleep1=30              # polls every sleep1 sec, please use a number value for seconds in order to enable proper interval calculation
 slotinterval="$(expr 4 \* $sleep1)"     # interval of slots for calculating a meaningful average slot time, can be overridden with static value
 validatorChecks="on"   # set to 'on' for obtaining validator metrics, will be autodiscovered to 'off' when flag --no-voting is set
 additionalInfo="on"    # set to 'on' for additional general metrics
