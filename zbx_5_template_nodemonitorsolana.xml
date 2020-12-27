@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>5.0</version>
-    <date>2020-12-27T00:08:12Z</date>
+    <date>2020-12-27T00:29:06Z</date>
     <groups>
         <group>
             <name>Templates/Applications</name>
@@ -81,6 +81,19 @@
                             <manual_close>YES</manual_close>
                         </trigger>
                     </triggers>
+                </item>
+                <item>
+                    <name>height</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>logrt[{$NMSLOGFILE},&quot;height=([0-9\.\-]*)&quot;,,,skip,\1,]</key>
+                    <delay>{$NMSUPDATEINTERVAL}</delay>
+                    <history>5d</history>
+                    <trends>14d</trends>
+                    <applications>
+                        <application>
+                            <name>Solana Validator</name>
+                        </application>
+                    </applications>
                 </item>
                 <item>
                     <name>leaderSlots</name>
