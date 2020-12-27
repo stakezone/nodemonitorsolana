@@ -1,35 +1,34 @@
 # nodemonitorsolana
 
-Template not yet updated for all new metrics...
-
-A complete log file based Solana validator up-time monitoring solution for Zabbix. It consists of the shell script nodemonitor.sh for generating log files on the host and the template zbx_5_template_nodemonitorsolana.xml for the Zabbix 5.0 server.
+A complete log file based Solana validator uptime monitoring solution for Zabbix. It consists of the shell script nodemonitor.sh for generating log files on the host and the template zbx_5_template_nodemonitorsolana.xml for the Zabbix 5.0 server. Also useful for other monitoring platforms and as a tool.
 
 ### Concept
 
 nodemonitor.sh generates human-readable logs that look like:
 
 `
-[2020-12-23 17:29:00-05:00] status=validating height=54509289 tFromNow=25 avgTime=.50 lastVote=54509353 rootSlot=54509295 leaderSlots=912 skippedSlots=189 pctSkipped=20.72 pctTotSkipped=19.94 pctSkippedDerivation=3.91 credits=14229146 activatedStake=57203.20 version=1.4.19 commission=100 pctTotDelinquent=2.80 pctNewerVersions=0 nodes=492 epoch=138 pctEpochElapsed=96.55`
+[2020-12-26 19:13:45-05:00] status=validating height=57554659 elapsed=35 lastVote=57554703 rootSlot=57554660 leaderSlots=488 skippedSlots=131 pctSkipped=26.84 pctTotSkipped=29.33 pctSkippedDelta=-8.48 pctTotDelinquent=1.68 version=1.4.19 pctNewerVersions=0 commission=0 activatedStake=701169.33 credits=49487265 avgSlotTime=.48 nodes=499 epoch=133 pctEpochElapsed=22.85`
  
 `
-[2020-12-23 17:30:07-05:00] status=validating height=54509468 tFromNow=28 avgTime=.47 lastVote=54509516 rootSlot=54509473 leaderSlots=912 skippedSlots=189 pctSkipped=20.72 pctTotSkipped=19.94 pctSkippedDerivation=3.91 credits=14229263 activatedStake=57203.20 version=1.4.19 commission=100 pctTotDelinquent=3.01 pctNewerVersions=0 nodes=492 epoch=138 pctEpochElapsed=96.58`
+[2020-12-26 19:14:50-05:00] status=validating height=57554798 elapsed=26 lastVote=57554853 rootSlot=57554803 leaderSlots=488 skippedSlots=131 pctSkipped=26.84 pctTotSkipped=29.34 pctSkippedDelta=-8.52 pctTotDelinquent=1.68 version=1.4.19 pctNewerVersions=0 commission=0 activatedStake=701169.33 credits=49487327 avgSlotTime=.50 nodes=506 epoch=133 pctEpochElapsed=22.88`
  
 `
-[2020-12-23 17:31:13-05:00] status=validating height=54509627 tFromNow=28 avgTime=.50 lastVote=54509668 rootSlot=54509631 leaderSlots=912 skippedSlots=189 pctSkipped=20.72 pctTotSkipped=19.94 pctSkippedDerivation=3.91 credits=14229368 activatedStake=57203.20 version=1.4.19 commission=100 pctTotDelinquent=3.01 pctNewerVersions=0 nodes=490 epoch=138 pctEpochElapsed=96.62`
+[2020-12-26 19:15:55-05:00] status=validating height=57554914 elapsed=36 lastVote=57554983 rootSlot=57554917 leaderSlots=488 skippedSlots=131 pctSkipped=26.84 pctTotSkipped=29.33 pctSkippedDelta=-8.48 pctTotDelinquent=1.68 version=1.4.19 pctNewerVersions=0 commission=0 activatedStake=701169.33 credits=49487408 avgSlotTime=.50 nodes=503 epoch=133 pctEpochElapsed=22.91`
 
 For the Zabbix server there is a log module for analyzing log data. The log line entries that are used by the server are:
 
 * **status** can be {scriptstarted | error | delinquent | validating | up} 'error' can have various causes, typically the `solana-validator` process is down. 'up' means the node is confirmed running when the validator metrics are turned off.
-* **tFromNow** time in seconds since recent block height (used for chain halt detection) 
+* **height** slot height
+* **elapsed** time in seconds since slot height (used for chain halt detection)
 * **pctSkipped** percentage of skipped leader slots
 * **leaderSlots** number of leader slots
 * **pctTotSkipped** percentage of total skipped leader slots for the validator set 
 * **pctSkippedDerivation** derivation in percentage of pctSkipped from pctTotSkipped, can be negative (how the node performs in relation to the average)
 * **activatedStake** the activated stake of this node
-* **pctTotDelinquent** percentage of delinquent nodes for the validator set (if high some general problem is likely)
+* **pctTotDelinquent** percentage of delinquent nodes for the validator set (if high some general problem is likely to be the cause)
 * **pctNewerVersions** percentage of nodes with newer version than this node based on stake (detects need for updating software)
-* **nodes**  the number of nodes
-* **avgSlotTime**  average slot time for interval as configured
+* **nodes** the number of nodes
+* **avgSlotTime** average slot time for the configured interval
 
 ### Installation
 
@@ -37,11 +36,10 @@ The script for the host has a configuration section on top where parameters can 
 
 A Zabbix server is required that connects to the host running the Solana validator. On the host side the Zabbix agent needs to be installed and configured for active mode. There is various information on the Zabbix site and from other sources that explains how to connect a host to the server and utilize the standard Linux OS templates for general monitoring. Once these steps are completed the Solana Validator template file can be imported. Under `All templates/Template App Solana Validator` there is a `Macros` section with several parameters that can be configured, in particular the path to the log file must be set. Do not change those values there, instead go to `Hosts` and select the particular host, then go to `Macros`, then to `Inherited and host macros`. There the macros from the generic template are mirrored for the specific host and can be set without affecting other hosts using the same template.
 
-More useful modules for GPU and SMART monitoring are available from the Zabbix site.
-
+Additional useful modules for GPU and SMART monitoring are available from the Zabbix site.
 
 ### Issues
 
-The Zabbix server is low on resources and a small size VPS is sufficient. However, lags can occur with the log file module. Performance problems with the server are mostly caused by the underlying database slowing down the processing. Database tuning might improve on the issues as well as changing the default Zabbix server parameters for caching etc.
+Getting the timestamp from the `solana block-time`sometimes fails causing a `Block Not Found` error. However, it is not a critical values and does not affect the purpose of uptime monitoring. Occasionally no `avgSlotTime` value can be calculated.
 
-Getting the timestamp from the `solana block-time` sometime fails causing a block not found error, however it does not affect the purpose of up-time monitoring. Occasionally no `avgSlotTime` value can be calculated.
+As of time of writing, the TdS cluster produces some inconsistent timestamps that lead to wrong time calculations for the `elapsed` time.
