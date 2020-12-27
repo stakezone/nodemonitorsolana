@@ -3,29 +3,35 @@
 #####    Packages required: jq, bc
 
 #####    CONFIG    ##################################################################################################
-configDir="$HOME/.config/solana/" # the directory for the config files, eg.: /home/user/.config/solana/
+configDir="$HOME/.config/solana" # the directory for the config files, eg.: /home/user/.config/solana
 ##### optional:        #
 identityPubkey=""      # identity pubkey for the validator, insert if autodiscovery fails
 voteAccount=""         # vote account address for the validator, specify if there are more than one or if autodiscovery fails
-sleep1=30             # polls every sleep1 sec, please use a value in seconds in order to enable proper interval calculation
-slotinterval="$(expr 4 \* $sleep1)"     # interval of slots for calculating average slot time
-validatorChecks="on"   # set to 'on' for obtaining validator metrics
-additionalInfo="on"    # set to on for additional general metrics
-cli=""                 # auto detection of the solana cli can fail or a custom installation is preferred, in case insert like /path/solana
+sleep1=60              # polls every sleep1 sec, please use a number value for seconds in order to enable proper interval calculation
+slotinterval="$(expr 4 \* $sleep1)"     # interval of slots for calculating a meaningful average slot time, can be overridden with static value
+validatorChecks="on"   # set to 'on' for obtaining validator metrics, will be autodiscovered to 'off' when flag --no-voting is set
+additionalInfo="on"    # set to 'on' for additional general metrics
+binDir=""              # auto detection of the solana binary directory can fail or an alternative custom installation is preferred, in case insert like $HOME/solana/target/release
 rpcURL=""              # default is localhost with port number autodiscovered, alternatively it can be specified like http://custom.rpc.com:port
-format="SOL"           # amounts shown in SOL instead of lamports
+format="SOL"           # amounts shown in 'SOL' instead of lamports
 logname=""             # a custom monitor log file name can be chosen, if left empty default is nodecheck-<username>.log
 logpath="$(pwd)"       # the directory where the log file is stored, for customization insert path like: /my/path
 logsize=200            # the max number of lines after that the log gets truncated to reduce its size
 dateprecision="seconds"      # precision for date format, can be seconds or ns (for nano seconds)
+colorI='\033[0;92m'    # black 30, red 31, green 32, yellow 33, blue 34, magenta 35, cyan 36, white 37
+colorD='\033[0;90m'    # for light color 9 instead of 3
+colorE='\033[0;91m'
+colorW='\033[0;93m'
+noColor='\033[0m'      # no color
 #####  END CONFIG  ##################################################################################################
 
-
-if [ -z $configDir ]; then echo "please configure the config directory"; exit 1; fi
-installDir="$(cat ${configDir}install/config.yml | grep 'active_release_dir\:' | awk '{print $2}')/bin"
-if [ -z  $installDir ]; then echo "please configure the cli manually or check the configDir setting"; exit 1; fi
-
-if [ -z  $cli ]; then cli="${installDir}/solana"; fi
+if [ -n  "$binDir" ]; then
+   cli="${binDir}/solana"
+else
+   if [ -z $configDir ]; then echo "please configure the config directory"; exit 1; fi
+   installDir="$(cat ${configDir}/install/config.yml | grep 'active_release_dir\:' | awk '{print $2}')/bin"
+   if [ -n "$installDir" ]; then cli="${installDir}/solana"; else echo "please configure the cli manually or check the configDir setting"; exit 1; fi
+fi
 
 if [ -z $rpcURL ]; then
    rpcPort=$(ps aux | grep solana-validator | grep -Po "\-\-rpc\-port\s+\K[0-9]+")
@@ -33,10 +39,14 @@ if [ -z $rpcURL ]; then
    rpcURL="http://127.0.0.1:$rpcPort"
 fi
 
-if [ -z $identityPubkey ]; then identityPubkey=$($cli address --url $rpcURL); fi
-if [ -z $identityPubkey ]; then echo "auto-detection failed, please configure the identityPubkey in the script"; exit 1; fi
-if [ -z $voteAccount ]; then voteAccount=$($cli validators --url $rpcURL --output json-compact | jq -r '.currentValidators[] | select(.identityPubkey == '\"$identityPubkey\"') | .voteAccountPubkey'); fi
-if [ -z $voteAccount ]; then echo "please configure the vote account in the script"; exit 1; fi
+noVoting=$(ps aux | grep solana-validator | grep -c "\-\-no\-voting")
+if [ "$noVoting" -eq 0 ]; then
+   if [ -z $identityPubkey ]; then identityPubkey=$($cli address --url $rpcURL); fi
+   if [ -z $identityPubkey ]; then echo "auto-detection failed, please configure the identityPubkey in the script if not done"; exit 1; fi
+   if [ -z $voteAccount ]; then voteAccount=$($cli validators --url $rpcURL --output json-compact | jq -r '.currentValidators[] | select(.identityPubkey == '\"$identityPubkey\"') | .voteAccountPubkey'); fi
+   if [ -z $voteAccount ]; then voteAccount=$($cli validators --url $rpcURL --output json-compact | jq -r '.delinquentValidators[] | select(.identityPubkey == '\"$identityPubkey\"') | .voteAccountPubkey'); fi
+   if [ -z $voteAccount ]; then echo "please configure the vote account in the script or wait for availability upon starting the node"; exit 1; fi
+else validatorChecks="off"; fi
 
 if [ -z $logname ]; then logname="nodemonitor-${USER}.log"; fi
 logfile="${logpath}/${logname}"
@@ -50,7 +60,7 @@ echo "vote account: ${voteAccount}"
 echo ""
 
 validatorCheck=$($cli validators --url $rpcURL)
-if [ $(grep -c $voteAccount <<< $validatorCheck) == 0  ]; then echo "validator not found in set"; exit 1; fi
+if [ $(grep -c $voteAccount <<< $validatorCheck) == 0  ] && [ "$validatorChecks" == "on" ]; then echo "validator not found in set"; exit 1; fi
 
 nloglines=$(wc -l <$logfile)
 if [ $nloglines -gt $logsize ]; then sed -i "1,$(expr $nloglines - $logsize)d" $logfile; fi # the log file is trimmed for logsize
@@ -59,8 +69,8 @@ date=$(date --rfc-3339=$dateprecision)
 echo "[$date] status=scriptstarted" >>$logfile
 
 while true; do
-    #validatorBlockTime=$($cli slot --commitment recent --url  $rpcURL | $cli block-time --url  $rpcURL --output json-compact)
-    validatorBlockTime=$($cli block-time --url $rpcURL --output json-compact)
+    validatorBlockTime=$($cli block-time --url  $rpcURL --output json-compact $($cli slot --commitment max --url  $rpcURL))
+    #validatorBlockTime=$($cli block-time --url $rpcURL --output json-compact)
     validatorBlockTimeTest=$(echo $validatorBlockTime | grep -c "timestamp")
     if [ "$validatorChecks" == "on" ]; then
        blockProduction=$($cli block-production --url $rpcURL --output json-compact)
@@ -75,8 +85,8 @@ while true; do
         blockHeightTime=$(jq -r '.timestamp' <<<$validatorBlockTime)
         #avgBlockTime=$(echo "scale=2 ; $(expr $blockHeightTime - $($cli block-time --url $rpcURL --output json-compact $(expr $blockHeight - $slotinterval) | jq -r '.timestamp')) / $slotinterval" | bc)
         now=$(date --rfc-3339=$dateprecision)
-        blockHeightFromNow=$(expr $(date +%s) - $blockHeightTime)
-        logentry="height=${blockHeight} tFromNow=${blockHeightFromNow}"
+        if [ -n "$blockHeightTime" ]; then blockHeightFromNow=$(expr $(date +%s) - $blockHeightTime); fi
+        logentry="height=${blockHeight} elapsed=${blockHeightFromNow}"
         if [ "$validatorChecks" == "on" ]; then
            if [ -n "$delinquentValidatorInfo" ]; then
               status=delinquent
@@ -85,7 +95,7 @@ while true; do
               credits=$(jq -r '.credits' <<<$delinquentValidatorInfo)
               version=$(jq -r '.version' <<<$delinquentValidatorInfo | sed 's/ /-/g')
               commission=$(jq -r '.commission' <<<$delinquentValidatorInfo)
-              logentry="$logentry lastVote=$(jq -r '.lastVote' <<<$delinquentValidatorInfo) rootSlot=$(jq -r '.rootSlot' <<<$delinquentValidatorInfo) credits=$credits activatedStake=$activatedStake version=$version commission=$commission"
+              logentry="$logentry rootSlot=$(jq -r '.rootSlot' <<<$delinquentValidatorInfo) lastVote=$(jq -r '.lastVote' <<<$delinquentValidatorInfo) credits=$credits activatedStake=$activatedStake version=$version commission=$commission"
            elif [ -n "$currentValidatorInfo" ]; then
               status=validating
               activatedStake=$(jq -r '.activatedStake' <<<$currentValidatorInfo)
@@ -93,7 +103,7 @@ while true; do
               credits=$(jq -r '.credits' <<<$currentValidatorInfo)
               version=$(jq -r '.version' <<<$currentValidatorInfo | sed 's/ /-/g')
               commission=$(jq -r '.commission' <<<$currentValidatorInfo)
-              logentry="$logentry lastVote=$(jq -r '.lastVote' <<<$currentValidatorInfo) rootSlot=$(jq -r '.rootSlot' <<<$currentValidatorInfo)"
+              logentry="$logentry rootSlot=$(jq -r '.rootSlot' <<<$currentValidatorInfo) lastVote=$(jq -r '.lastVote' <<<$currentValidatorInfo)"
               leaderSlots=$(jq -r '.leaderSlots' <<<$validatorBlockProduction)
               skippedSlots=$(jq -r '.skippedSlots' <<<$validatorBlockProduction)
               #totalBlocksProduced=$(jq -r '.total_blocks_produced' <<<$blockProduction)
@@ -103,44 +113,62 @@ while true; do
               if [ -n "$leaderSlots" ]; then pctSkipped=$(echo "scale=2 ; 100 * $skippedSlots / $leaderSlots" | bc); fi
               if [ -n "$totalBlocksProduced" ]; then
                  pctTotSkipped=$(echo "scale=2 ; 100 * $totalSlotsSkipped / $totalBlocksProduced" | bc)
-                 pctSkippedAvgDeriv=$(echo "scale=2 ; 100 * ($pctSkipped - $pctTotSkipped) / $pctTotSkipped" | bc)
+                 pctSkippedDelta=$(echo "scale=2 ; 100 * ($pctSkipped - $pctTotSkipped) / $pctTotSkipped" | bc)
               fi
-              logentry="$logentry leaderSlots=$leaderSlots skippedSlots=$skippedSlots pctSkipped=$pctSkipped pctTotSkipped=$pctTotSkipped pctSkippedAvgDeriv=$pctSkippedAvgDeriv"
-              logentry="$logentry credits=$credits activatedStake=$activatedStakeDisplay version=$version commission=$commission"
+              totalActiveStake=$(jq -r '.totalActiveStake' <<<$validators)
+              totalDelinquentStake=$(jq -r '.totalDelinquentStake' <<<$validators)
+              pctTotDelinquent=$(echo "scale=2 ; 100 * $totalDelinquentStake / $totalActiveStake" | bc)
+              #versionActiveStake=$(jq -r '.stakeByVersion.'\"$version\"'.currentActiveStake' <<<$validators)
+              stakeByVersion=$(jq -r '.stakeByVersion' <<<$validators)
+              stakeByVersion=$(jq -r 'to_entries | map_values(.value + { version: .key })' <<<$stakeByVersion)
+              nextVersionIndex=$(expr $(jq -r 'map(.version == '\"$version\"') | index(true)' <<<$stakeByVersion) + 1)
+              stakeByVersion=$(jq '.['$nextVersionIndex':]' <<<$stakeByVersion)
+              stakeNewerVersions=$(jq -s 'map(.[].currentActiveStake) | add' <<<$stakeByVersion)
+              totalCurrentStake=$(jq -r '.totalCurrentStake' <<<$validators)
+              #pctVersionActive=$(echo "scale=2 ; 100 * $versionActiveStake / $totalCurrentStake" | bc)
+              pctNewerVersions=$(echo "scale=2 ; 100 * $stakeNewerVersions / $totalCurrentStake" | bc)
+              logentry="$logentry leaderSlots=$leaderSlots skippedSlots=$skippedSlots pctSkipped=$pctSkipped pctTotSkipped=$pctTotSkipped pctSkippedDelta=$pctSkippedDelta pctTotDelinquent=$pctTotDelinquent"
+              logentry="$logentry version=$version pctNewerVersions=$pctNewerVersions commission=$commission activatedStake=$activatedStakeDisplay credits=$credits"
            else status=error; fi
         fi
         if [ "$additionalInfo" == "on" ]; then
-           totalActiveStake=$(jq -r '.totalActiveStake' <<<$validators)
-           totalDelinquentStake=$(jq -r '.totalDelinquentStake' <<<$validators)
-           pctTotDelinquent=$(echo "scale=2 ; 100 * $totalDelinquentStake / $totalActiveStake" | bc)
-           #versionActiveStake=$(jq -r '.stakeByVersion.'\"$version\"'.currentActiveStake' <<<$validators)
-           stakeByVersion=$(jq -r '.stakeByVersion' <<<$validators)
-           stakeByVersion=$(jq -r 'to_entries | map_values(.value + { version: .key })' <<<$stakeByVersion)
-           nextVersionIndex=$(expr $(jq -r 'map(.version == '\"$version\"') | index(true)' <<<$stakeByVersion) + 1)
-           stakeByVersion=$(jq '.['$nextVersionIndex':]' <<<$stakeByVersion)
-           stakeNewerVersions=$(jq -s 'map(.[].currentActiveStake) | add' <<<$stakeByVersion)
-           totalCurrentStake=$(jq -r '.totalCurrentStake' <<<$validators)
-           #pctVersionActive=$(echo "scale=2 ; 100 * $versionActiveStake / $totalCurrentStake" | bc)
-           pctNewerVersions=$(echo "scale=2 ; 100 * $stakeNewerVersions / $totalCurrentStake" | bc)
-           slotIntervalTime=$($cli block-time --url $rpcURL --output json-compact $(expr $blockHeight - $slotinterval) | jq -r '.timestamp')
-           avgSlotTime=""
-           if [[ -n "$slotIntervalTime" && -n "$blockHeightTime" ]]; then avgSlotTime=$(echo "scale=2 ; ($blockHeightTime - $slotIntervalTime) / $slotinterval" | bc); fi
+           if [ -n "$blockHeightTime" ]; then
+              if [ -n "$blockHeight" ];then slotIntervalTime=$($cli block-time --url $rpcURL --output json-compact $(expr $blockHeight - $slotinterval) | jq -r '.timestamp'); fi
+              if [ -n "$slotIntervalTime" ];then avgSlotTime=$(echo "scale=2 ; ($blockHeightTime - $slotIntervalTime) / $slotinterval" | bc); fi
+           fi
            nodes=$($cli gossip --url $rpcURL | grep -Po "Nodes:\s+\K[0-9]+")
            epochInfo=$($cli epoch-info --url $rpcURL --output json-compact)
            epoch=$(jq -r '.epoch' <<<$epochInfo)
            pctEpochElapsed=$(echo "scale=2 ; 100 * $(jq -r '.slotIndex' <<<$epochInfo) / $(jq -r '.slotsInEpoch' <<<$epochInfo)" | bc)
-           logentry="$logentry pctTotDelinquent=$pctTotDelinquent pctNewerVersions=$pctNewerVersions avgSlotTime=$avgSlotTime nodes=$nodes epoch=$epoch pctEpochElapsed=$pctEpochElapsed"
+           logentry="$logentry avgSlotTime=$avgSlotTime nodes=$nodes epoch=$epoch pctEpochElapsed=$pctEpochElapsed"
         fi
         logentry="[$now] status=$status $logentry"
         echo "$logentry" >>$logfile
     else
         now=$(date --rfc-3339=$dateprecision)
-        logentry="[$now] status=error"
+        status="error"
+        logentry="[$now] status=$status"
         echo "$logentry" >>$logfile
     fi
     nloglines=$(wc -l <$logfile)
     if [ $nloglines -gt $logsize ]; then sed -i '1d' $logfile; fi
-    echo "$logentry"
-    echo "sleep $sleep1"
+
+    case $status in
+       validating|up)
+          color=$colorI
+          ;;
+       error)
+          color=$colorE
+          ;;
+       delinquent)
+          color=$colorW
+          ;;
+       *)
+          color=$noColor
+          ;;
+    esac
+    logentry=$(sed 's/[^ ]*[\=]/'\\${color}'&'\\${noColor}'/g' <<<$logentry)
+    echo -e $logentry
+    echo -e "${colorD}sleep $sleep1${noColor}"
     sleep $sleep1
 done
