@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>5.0</version>
-    <date>2020-12-27T07:18:32Z</date>
+    <date>2020-12-27T07:39:10Z</date>
     <groups>
         <group>
             <name>Templates/Applications</name>
@@ -672,14 +672,20 @@ error can have various causes, typically the solana-validator process is down.</
             <manual_close>YES</manual_close>
         </trigger>
         <trigger>
-            <expression>{Template App Solana Validator:logrt[{$NMSLOGFILE},&quot;pctSkippedDelta=([0-9\.\-]*)&quot;,,,skip,\1,].last()}&gt;20 and {Template App Solana Validator:logrt[{$NMSLOGFILE},&quot;leaderSlots=([0-9\.\-]*)&quot;,,,skip,\1,].last()}&gt;{$NMSTHRSHLDLEADERSLOTS}</expression>
-            <name>{$NMSNODEID} : %skippedDelta &gt; 20 for leaderSlots &gt; {$NMSTHRSHLDLEADERSLOTS} : pct={ITEM.VALUE}</name>
+            <expression>{Template App Solana Validator:logrt[{$NMSLOGFILE},&quot;pctSkippedDelta=([0-9\.\-]*)&quot;,,,skip,\1,].last()}&gt;=50 and {Template App Solana Validator:logrt[{$NMSLOGFILE},&quot;leaderSlots=([0-9\.\-]*)&quot;,,,skip,\1,].last()}&gt;{$NMSTHRSHLDLEADERSLOTS}</expression>
+            <name>{$NMSNODEID} : %skippedDelta &gt;= 50 for leaderSlots &gt; {$NMSTHRSHLDLEADERSLOTS} : pct={ITEM.VALUE}</name>
             <priority>WARNING</priority>
             <manual_close>YES</manual_close>
         </trigger>
         <trigger>
             <expression>{Template App Solana Validator:logrt[{$NMSLOGFILE},&quot;pctSkippedDelta=([0-9\.\-]*)&quot;,,,skip,\1,].last()}&gt;5 and {Template App Solana Validator:logrt[{$NMSLOGFILE},&quot;pctSkippedDelta=([0-9\.\-]*)&quot;,,,skip,\1,].last()}&lt;=10 and {Template App Solana Validator:logrt[{$NMSLOGFILE},&quot;leaderSlots=([0-9\.\-]*)&quot;,,,skip,\1,].last()}&gt;{$NMSTHRSHLDLEADERSLOTS}</expression>
             <name>{$NMSNODEID} : 5 &lt; %skippedDelta &lt;= 10 for leaderSlots &gt; {$NMSTHRSHLDLEADERSLOTS} : pct={ITEM.VALUE}</name>
+            <priority>INFO</priority>
+            <manual_close>YES</manual_close>
+        </trigger>
+        <trigger>
+            <expression>{Template App Solana Validator:logrt[{$NMSLOGFILE},&quot;pctSkippedDelta=([0-9\.\-]*)&quot;,,,skip,\1,].last()}&gt;10 and {Template App Solana Validator:logrt[{$NMSLOGFILE},&quot;pctSkippedDelta=([0-9\.\-]*)&quot;,,,skip,\1,].last()}&lt;=50 and {Template App Solana Validator:logrt[{$NMSLOGFILE},&quot;leaderSlots=([0-9\.\-]*)&quot;,,,skip,\1,].last()}&gt;{$NMSTHRSHLDLEADERSLOTS}</expression>
+            <name>{$NMSNODEID} : 10 &lt; %skippedDelta &lt;= 50 for leaderSlots &gt; {$NMSTHRSHLDLEADERSLOTS} : pct={ITEM.VALUE}</name>
             <priority>INFO</priority>
             <manual_close>YES</manual_close>
         </trigger>
