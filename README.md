@@ -20,8 +20,8 @@ nodemonitor.sh generates human-readable logs that look like:
 For the Zabbix server there is a log module for analyzing log data. The log line entries that are used by the server are:
 
 * **status** can be {scriptstarted | error | delinquent | validating | up} 'error' can have various causes, typically the `solana-validator` process is down. 'up' means the node is confirmed running when the validator metrics are turned off.
-* **height** slot height (confirmed by supermajority)
-* **elapsed** time in seconds since slot height (used for chain halt detection)
+* **height** slot height (finalized, confirmed by supermajority)
+* **elapsed** time in seconds since slot height (useful for latency or chain halt detection)
 * **pctSkipped** percentage of skipped leader slots
 * **leaderSlots** number of leader slots
 * **pctTotSkipped** percentage of total skipped leader slots for the validator set 
