@@ -40,6 +40,6 @@ Additional useful modules for GPU and SMART monitoring are available from the Za
 
 ### Issues
 
-Getting the timestamp from the `solana block-time`sometimes fails causing a `Block Not Found` error. However, it is not a critical values and does not affect the purpose of uptime monitoring. Occasionally no `avgSlotTime` value can be calculated.
+Getting the timestamp from `solana block-time`sometimes fails causing a `Block Not Found` error. However, it is not a critical values and does not affect the purpose of uptime monitoring. Occasionally no `avgSlotTime` value can be calculated.
 
 As of time of writing, the TdS cluster produces some inconsistent timestamps that lead to wrong time calculations for the `elapsed` time.
