@@ -131,6 +131,7 @@ while true; do
               logentry="$logentry version=$version pctNewerVersions=$pctNewerVersions commission=$commission activatedStake=$activatedStakeDisplay credits=$credits"
            else status=error; fi
         fi
+        avgSlotTime=""
         if [ "$additionalInfo" == "on" ]; then
            if [ -n "$blockHeightTime" ]; then
               if [ -n "$blockHeight" ];then slotIntervalTime=$($cli block-time --url $rpcURL --output json-compact $(expr $blockHeight - $slotinterval) | jq -r '.timestamp'); fi
