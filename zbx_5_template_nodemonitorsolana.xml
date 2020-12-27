@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>5.0</version>
-    <date>2020-12-27T00:29:06Z</date>
+    <date>2020-12-27T07:18:32Z</date>
     <groups>
         <group>
             <name>Templates/Applications</name>
@@ -107,13 +107,6 @@
                             <name>Solana Validator</name>
                         </application>
                     </applications>
-                    <triggers>
-                        <trigger>
-                            <expression>{last(#1,0)}&lt;&gt;0</expression>
-                            <name>{$NMSNODEID} : test change &gt; 10 min: new={ITEM.LASTVALUE} new2={ITEM.VALUE}</name>
-                            <manual_close>YES</manual_close>
-                        </trigger>
-                    </triggers>
                 </item>
                 <item>
                     <name>nodes</name>
