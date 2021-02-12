@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>5.0</version>
-    <date>2020-12-27T07:39:10Z</date>
+    <date>2021-02-11T23:39:04Z</date>
     <groups>
         <group>
             <name>Templates/Applications</name>
@@ -41,7 +41,6 @@
                             <expression>{change()}&lt;&gt;0</expression>
                             <recovery_mode>NONE</recovery_mode>
                             <name>{$NMSNODEID} : activated stake : change : new={ITEM.VALUE}</name>
-                            <status>DISABLED</status>
                             <priority>INFO</priority>
                             <manual_close>YES</manual_close>
                         </trigger>
@@ -60,6 +59,34 @@
                             <name>Solana Validator</name>
                         </application>
                     </applications>
+                </item>
+                <item>
+                    <name>balance</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>logrt[{$NMSLOGFILE},&quot;balance=([0-9\.\-]*)&quot;,,,skip,\1,]</key>
+                    <delay>{$NMSUPDATEINTERVAL}</delay>
+                    <history>5d</history>
+                    <trends>14d</trends>
+                    <value_type>FLOAT</value_type>
+                    <applications>
+                        <application>
+                            <name>Solana Validator</name>
+                        </application>
+                    </applications>
+                    <triggers>
+                        <trigger>
+                            <expression>{last()}&gt;10 and {last()}&lt;=20</expression>
+                            <name>{$NMSNODEID} : 10 &lt; balance &lt;= 20 : last={ITEM.VALUE}</name>
+                            <priority>INFO</priority>
+                            <manual_close>YES</manual_close>
+                        </trigger>
+                        <trigger>
+                            <expression>{last()}&lt;=10</expression>
+                            <name>{$NMSNODEID} : balance &lt;= 10 : last={ITEM.VALUE}</name>
+                            <priority>AVERAGE</priority>
+                            <manual_close>YES</manual_close>
+                        </trigger>
+                    </triggers>
                 </item>
                 <item>
                     <name>nodemonitor elapsed</name>
@@ -138,7 +165,7 @@
                         <trigger>
                             <expression>{last()}&gt;30</expression>
                             <name>{$NMSNODEID} : %NewerVersions &gt; 30 : pct={ITEM.VALUE}</name>
-                            <priority>WARNING</priority>
+                            <priority>AVERAGE</priority>
                             <manual_close>YES</manual_close>
                         </trigger>
                         <trigger>
@@ -245,7 +272,7 @@ error can have various causes, typically the solana-validator process is down.</
                         <trigger>
                             <expression>{iregexp(delinquent,#1)}=1</expression>
                             <name>{$NMSNODEID} : status : delinquent</name>
-                            <priority>WARNING</priority>
+                            <priority>AVERAGE</priority>
                             <manual_close>YES</manual_close>
                         </trigger>
                         <trigger>
@@ -276,7 +303,7 @@ error can have various causes, typically the solana-validator process is down.</
                 <macro>
                     <macro>{$NMSNODEID}</macro>
                     <value>Solana</value>
-                    <description>Identifier for the node on the server (useful if more than one are hosted).</description>
+                    <description>Identifier for the node on the server (useful if more than one are hosted, or for designating testnet etc.).</description>
                 </macro>
                 <macro>
                     <macro>{$NMSTHRSHLDLEADERSLOTS}</macro>
@@ -298,7 +325,7 @@ error can have various causes, typically the solana-validator process is down.</
                 <screen>
                     <name>Solana Metrics</name>
                     <hsize>2</hsize>
-                    <vsize>4</vsize>
+                    <vsize>5</vsize>
                     <screen_items>
                         <screen_item>
                             <resourcetype>0</resourcetype>
@@ -476,12 +503,34 @@ error can have various causes, typically the solana-validator process is down.</
                             <application/>
                             <max_columns>3</max_columns>
                         </screen_item>
+                        <screen_item>
+                            <resourcetype>0</resourcetype>
+                            <style>0</style>
+                            <resource>
+                                <name>balance</name>
+                                <host>Template App Solana Validator</host>
+                            </resource>
+                            <width>500</width>
+                            <height>100</height>
+                            <x>0</x>
+                            <y>4</y>
+                            <colspan>1</colspan>
+                            <rowspan>1</rowspan>
+                            <elements>0</elements>
+                            <valign>0</valign>
+                            <halign>0</halign>
+                            <dynamic>0</dynamic>
+                            <sort_triggers>0</sort_triggers>
+                            <url/>
+                            <application/>
+                            <max_columns>3</max_columns>
+                        </screen_item>
                     </screen_items>
                 </screen>
                 <screen>
                     <name>Solana Metrics Mobile</name>
                     <hsize>1</hsize>
-                    <vsize>8</vsize>
+                    <vsize>9</vsize>
                     <screen_items>
                         <screen_item>
                             <resourcetype>0</resourcetype>
@@ -659,6 +708,28 @@ error can have various causes, typically the solana-validator process is down.</
                             <application/>
                             <max_columns>3</max_columns>
                         </screen_item>
+                        <screen_item>
+                            <resourcetype>0</resourcetype>
+                            <style>0</style>
+                            <resource>
+                                <name>balance</name>
+                                <host>Template App Solana Validator</host>
+                            </resource>
+                            <width>500</width>
+                            <height>100</height>
+                            <x>0</x>
+                            <y>8</y>
+                            <colspan>1</colspan>
+                            <rowspan>1</rowspan>
+                            <elements>0</elements>
+                            <valign>0</valign>
+                            <halign>0</halign>
+                            <dynamic>0</dynamic>
+                            <sort_triggers>0</sort_triggers>
+                            <url/>
+                            <application/>
+                            <max_columns>3</max_columns>
+                        </screen_item>
                     </screen_items>
                 </screen>
             </screens>
@@ -790,6 +861,19 @@ error can have various causes, typically the solana-validator process is down.</
             </graph_items>
         </graph>
         <graph>
+            <name>balance</name>
+            <graph_items>
+                <graph_item>
+                    <sortorder>1</sortorder>
+                    <color>199C0D</color>
+                    <item>
+                        <host>Template App Solana Validator</host>
+                        <key>logrt[{$NMSLOGFILE},&quot;balance=([0-9\.\-]*)&quot;,,,skip,\1,]</key>
+                    </item>
+                </graph_item>
+            </graph_items>
+        </graph>
+        <graph>
             <name>Nodes</name>
             <type>STACKED</type>
             <graph_items>
@@ -819,3 +903,4 @@ error can have various causes, typically the solana-validator process is down.</
         </graph>
     </graphs>
 </zabbix_export>
+
