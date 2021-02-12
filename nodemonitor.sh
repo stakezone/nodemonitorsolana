@@ -1,4 +1,4 @@
-kk#!/bin/bash
+#!/bin/bash
 
 #set -x # for debugging
 
