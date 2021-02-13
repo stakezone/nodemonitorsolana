@@ -74,7 +74,7 @@ echo "[$date] status=scriptstarted" >>$logfile
 
 while true; do
     validatorBlockTime=$($cli block-time --url  $rpcURL --output json-compact $($cli slot --commitment max --url  $rpcURL))
-    slotHeight=$($cli slot --commitment singleGossip --url  $rpcURL)
+    slotHeight=$($cli slot --commitment singleGossip) # this should query the cluster
     #validatorBlockTime=$($cli block-time --url $rpcURL --output json-compact)
     validatorBlockTimeTest=$(echo $validatorBlockTime | grep -c "timestamp")
     if [ "$validatorChecks" == "on" ]; then
