@@ -96,10 +96,11 @@ while true; do
               status=delinquent
               activatedStake=$(jq -r '.activatedStake' <<<$delinquentValidatorInfo)
               activatedStakeDisplay=$activatedStake
+              if [ "$format" == "SOL" ]; then activatedStakeDisplay=$(echo "scale=2 ; $activatedStake / 1000000000.0" | bc); fi
               credits=$(jq -r '.credits' <<<$delinquentValidatorInfo)
               version=$(jq -r '.version' <<<$delinquentValidatorInfo | sed 's/ /-/g')
               commission=$(jq -r '.commission' <<<$delinquentValidatorInfo)
-              logentry="$logentry rootSlot=$(jq -r '.rootSlot' <<<$delinquentValidatorInfo) lastVote=$(jq -r '.lastVote' <<<$delinquentValidatorInfo) credits=$credits activatedStake=$activatedStake version=$version commission=$commission"
+              logentry="$logentry rootSlot=$(jq -r '.rootSlot' <<<$delinquentValidatorInfo) lastVote=$(jq -r '.lastVote' <<<$delinquentValidatorInfo) credits=$credits activatedStake=$activatedStakeDisplay version=$version commission=$commission"
            elif [ -n "$currentValidatorInfo" ]; then
               status=validating
               balance=$($cli account $identityPubkey --url $rpcURL --output json-compact)
