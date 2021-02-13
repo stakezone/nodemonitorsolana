@@ -56,6 +56,8 @@ Getting the timestamp from `solana block-time`sometimes fails causing a `Block N
 
 If suppression of error messages is preferred, start like `./nodemonitor.sh 2> /dev/null`.
 
-If the `ledger/` directory gets deleted several values are only available in the next epoch. However, no essential values for uptime monitoring are affected.
+If the `ledger/` directory gets deleted or otherwise is initiated several values are only available in the next epoch. However, no essential values for uptime monitoring are affected.
 
 As of time of writing, a cluster can sometimes produce inconsistent timestamps that lead to wrong time calculation causing the `elapsed` time showing large lags.
+
+The 'balance' threshold values in the Zabbix template are for Sol and not for Lamports. When using Lamport the values would need to get adjusted.
