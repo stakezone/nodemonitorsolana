@@ -114,8 +114,8 @@ while true; do
               credits=$(jq -r '.credits' <<<$currentValidatorInfo)
               version=$(jq -r '.version' <<<$currentValidatorInfo | sed 's/ /-/g')
               commission=$(jq -r '.commission' <<<$currentValidatorInfo)
-              rootSlot=$(jq -r '.rootSlot' <<<$delinquentValidatorInfo)
-              lastVote=$(jq -r '.lastVote' <<<$delinquentValidatorInfo)
+              rootSlot=$(jq -r '.rootSlot' <<<$currentValidatorInfo)
+              lastVote=$(jq -r '.lastVote' <<<$currentValidatorInfo)
               logentry="$logentry rootSlot=$rootSlot lastVote=$lastVote"
               leaderSlots=$(jq -r '.leaderSlots' <<<$validatorBlockProduction)
               skippedSlots=$(jq -r '.skippedSlots' <<<$validatorBlockProduction)
@@ -169,7 +169,6 @@ while true; do
     fi
     nloglines=$(wc -l <$logfile)
     if [ $nloglines -gt $logsize ]; then sed -i '1d' $logfile; fi
-
     case $status in
        validating|up)
           color=$colorI
