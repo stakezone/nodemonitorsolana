@@ -89,7 +89,7 @@ while true; do
         blockHeight=$(jq -r '.slot' <<<$validatorBlockTime)
         blockHeightTime=$(jq -r '.timestamp' <<<$validatorBlockTime)
         #avgBlockTime=$(echo "scale=2 ; $(expr $blockHeightTime - $($cli block-time --url $rpcURL --output json-compact $(expr $blockHeight - $slotinterval) | jq -r '.timestamp')) / $slotinterval" | bc)
-        behind=$(($slotHeight - blockHeight))
+        if [[ -n "$slotHeight" && -n "$blockHeight" ]]; then behind=$(($slotHeight - $blockHeight));else behind=""; fi
         now=$(date --rfc-3339=$dateprecision)
         if [ -n "$blockHeightTime" ]; then blockHeightFromNow=$(( $(date +%s) - $blockHeightTime)); fi
         logentry="height=${blockHeight} elapsed=${blockHeightFromNow} behind=${behind}"
@@ -101,10 +101,9 @@ while true; do
               if [ "$format" == "SOL" ]; then activatedStakeDisplay=$(echo "scale=2 ; $activatedStake / 1000000000.0" | bc); fi
               credits=$(jq -r '.credits' <<<$delinquentValidatorInfo)
               version=$(jq -r '.version' <<<$delinquentValidatorInfo | sed 's/ /-/g')
-              commission=$(jq -r '.commission' <<<$delinquentValidatorInfo)
               rootSlot=$(jq -r '.rootSlot' <<<$delinquentValidatorInfo)
               lastVote=$(jq -r '.lastVote' <<<$delinquentValidatorInfo)
-              logentry="$logentry rootSlot=$rootSlot lastVote=$lastVote credits=$credits activatedStake=$activatedStakeDisplay version=$version commission=$commission"
+              logentry="$logentry rootSlot=$rootSlot lastVote=$lastVote credits=$credits activatedStake=$activatedStakeDisplay version=$version"
            elif [ -n "$currentValidatorInfo" ]; then
               status=validating
               balance=$($cli account $identityPubkey --url $rpcURL --output json-compact)
