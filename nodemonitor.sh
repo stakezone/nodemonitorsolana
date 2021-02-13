@@ -74,6 +74,7 @@ echo "[$date] status=scriptstarted" >>$logfile
 
 while true; do
     validatorBlockTime=$($cli block-time --url  $rpcURL --output json-compact $($cli slot --commitment max --url  $rpcURL))
+    slotHeight=$($cli slot --commitment singleGossip --url  $rpcURL)
     #validatorBlockTime=$($cli block-time --url $rpcURL --output json-compact)
     validatorBlockTimeTest=$(echo $validatorBlockTime | grep -c "timestamp")
     if [ "$validatorChecks" == "on" ]; then
@@ -88,9 +89,10 @@ while true; do
         blockHeight=$(jq -r '.slot' <<<$validatorBlockTime)
         blockHeightTime=$(jq -r '.timestamp' <<<$validatorBlockTime)
         #avgBlockTime=$(echo "scale=2 ; $(expr $blockHeightTime - $($cli block-time --url $rpcURL --output json-compact $(expr $blockHeight - $slotinterval) | jq -r '.timestamp')) / $slotinterval" | bc)
+        behind=$(($slotHeight - blockHeight))
         now=$(date --rfc-3339=$dateprecision)
         if [ -n "$blockHeightTime" ]; then blockHeightFromNow=$(( $(date +%s) - $blockHeightTime)); fi
-        logentry="height=${blockHeight} elapsed=${blockHeightFromNow}"
+        logentry="height=${blockHeight} elapsed=${blockHeightFromNow} behind=${behind}"
         if [ "$validatorChecks" == "on" ]; then
            if [ -n "$delinquentValidatorInfo" ]; then
               status=delinquent
@@ -100,7 +102,9 @@ while true; do
               credits=$(jq -r '.credits' <<<$delinquentValidatorInfo)
               version=$(jq -r '.version' <<<$delinquentValidatorInfo | sed 's/ /-/g')
               commission=$(jq -r '.commission' <<<$delinquentValidatorInfo)
-              logentry="$logentry rootSlot=$(jq -r '.rootSlot' <<<$delinquentValidatorInfo) lastVote=$(jq -r '.lastVote' <<<$delinquentValidatorInfo) credits=$credits activatedStake=$activatedStakeDisplay version=$version commission=$commission"
+              rootSlot=$(jq -r '.rootSlot' <<<$delinquentValidatorInfo)
+              lastVote=$(jq -r '.lastVote' <<<$delinquentValidatorInfo)
+              logentry="$logentry rootSlot=$rootSlot lastVote=$lastVote credits=$credits activatedStake=$activatedStakeDisplay version=$version commission=$commission"
            elif [ -n "$currentValidatorInfo" ]; then
               status=validating
               balance=$($cli account $identityPubkey --url $rpcURL --output json-compact)
@@ -110,7 +114,9 @@ while true; do
               credits=$(jq -r '.credits' <<<$currentValidatorInfo)
               version=$(jq -r '.version' <<<$currentValidatorInfo | sed 's/ /-/g')
               commission=$(jq -r '.commission' <<<$currentValidatorInfo)
-              logentry="$logentry rootSlot=$(jq -r '.rootSlot' <<<$currentValidatorInfo) lastVote=$(jq -r '.lastVote' <<<$currentValidatorInfo)"
+              rootSlot=$(jq -r '.rootSlot' <<<$delinquentValidatorInfo)
+              lastVote=$(jq -r '.lastVote' <<<$delinquentValidatorInfo)
+              logentry="$logentry rootSlot=$rootSlot lastVote=$lastVote"
               leaderSlots=$(jq -r '.leaderSlots' <<<$validatorBlockProduction)
               skippedSlots=$(jq -r '.skippedSlots' <<<$validatorBlockProduction)
               #totalBlocksProduced=$(jq -r '.total_blocks_produced' <<<$blockProduction)
