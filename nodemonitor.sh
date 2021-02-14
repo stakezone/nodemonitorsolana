@@ -117,7 +117,7 @@ while true; do
               commission=$(jq -r '.commission' <<<$currentValidatorInfo)
               rootSlot=$(jq -r '.rootSlot' <<<$currentValidatorInfo)
               lastVote=$(jq -r '.lastVote' <<<$currentValidatorInfo)
-              logentry="$logentry rootSlot=$rootSlot lastVote=$lastVote"
+              logentry="$logentry behind=$behind rootSlot=$rootSlot lastVote=$lastVote"
               leaderSlots=$(jq -r '.leaderSlots' <<<$validatorBlockProduction)
               skippedSlots=$(jq -r '.skippedSlots' <<<$validatorBlockProduction)
               #totalBlocksProduced=$(jq -r '.total_blocks_produced' <<<$blockProduction)
@@ -144,7 +144,7 @@ while true; do
               totalCurrentStake=$(jq -r '.totalCurrentStake' <<<$validators)
               #pctVersionActive=$(echo "scale=2 ; 100 * $versionActiveStake / $totalCurrentStake" | bc)
               pctNewerVersions=$(echo "scale=2 ; 100 * $stakeNewerVersions / $totalCurrentStake" | bc)
-              logentry="$logentry behind=$behind leaderSlots=$leaderSlots skippedSlots=$skippedSlots pctSkipped=$pctSkipped pctTotSkipped=$pctTotSkipped pctSkippedDelta=$pctSkippedDelta pctTotDelinquent=$pctTotDelinquent"
+              logentry="$logentry leaderSlots=$leaderSlots skippedSlots=$skippedSlots pctSkipped=$pctSkipped pctTotSkipped=$pctTotSkipped pctSkippedDelta=$pctSkippedDelta pctTotDelinquent=$pctTotDelinquent"
               logentry="$logentry version=$version pctNewerVersions=$pctNewerVersions balance=$balance activatedStake=$activatedStakeDisplay credits=$credits commission=$commission"
            else status=error; fi
         else
