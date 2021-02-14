@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>5.0</version>
-    <date>2021-02-11T23:39:04Z</date>
+    <date>2021-02-14T05:19:17Z</date>
     <groups>
         <group>
             <name>Templates/Applications</name>
@@ -28,8 +28,8 @@
                     <type>ZABBIX_ACTIVE</type>
                     <key>logrt[{$NMSLOGFILE},&quot;activatedStake=([0-9\.\-]*)&quot;,,,skip,\1,]</key>
                     <delay>{$NMSUPDATEINTERVAL}</delay>
-                    <history>5d</history>
-                    <trends>14d</trends>
+                    <history>30d</history>
+                    <trends>60d</trends>
                     <value_type>FLOAT</value_type>
                     <applications>
                         <application>
@@ -51,8 +51,8 @@
                     <type>ZABBIX_ACTIVE</type>
                     <key>logrt[{$NMSLOGFILE},&quot;avgSlotTime=([0-9\.\-]*)&quot;,,,skip,\1,]</key>
                     <delay>{$NMSUPDATEINTERVAL}</delay>
-                    <history>5d</history>
-                    <trends>14d</trends>
+                    <history>30d</history>
+                    <trends>60d</trends>
                     <value_type>FLOAT</value_type>
                     <applications>
                         <application>
@@ -65,8 +65,8 @@
                     <type>ZABBIX_ACTIVE</type>
                     <key>logrt[{$NMSLOGFILE},&quot;balance=([0-9\.\-]*)&quot;,,,skip,\1,]</key>
                     <delay>{$NMSUPDATEINTERVAL}</delay>
-                    <history>5d</history>
-                    <trends>14d</trends>
+                    <history>30d</history>
+                    <trends>60d</trends>
                     <value_type>FLOAT</value_type>
                     <applications>
                         <application>
@@ -89,12 +89,33 @@
                     </triggers>
                 </item>
                 <item>
+                    <name>behind</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>logrt[{$NMSLOGFILE},&quot;behind=([0-9\.\-]*)&quot;,,,skip,\1,]</key>
+                    <delay>{$NMSUPDATEINTERVAL}</delay>
+                    <history>30d</history>
+                    <trends>60d</trends>
+                    <applications>
+                        <application>
+                            <name>Solana Validator</name>
+                        </application>
+                    </applications>
+                    <triggers>
+                        <trigger>
+                            <expression>{avg(#10)}&gt;=1.2*{avg(1h,10m)}</expression>
+                            <name>{$NMSNODEID} : behind last 10 avg &gt;20% above 1h avg  : last={ITEM.VALUE}</name>
+                            <priority>INFO</priority>
+                            <manual_close>YES</manual_close>
+                        </trigger>
+                    </triggers>
+                </item>
+                <item>
                     <name>nodemonitor elapsed</name>
                     <type>ZABBIX_ACTIVE</type>
                     <key>logrt[{$NMSLOGFILE},&quot;elapsed=([0-9\.\-]*)&quot;,,,skip,\1,]</key>
                     <delay>{$NMSUPDATEINTERVAL}</delay>
-                    <history>5d</history>
-                    <trends>14d</trends>
+                    <history>30d</history>
+                    <trends>60d</trends>
                     <applications>
                         <application>
                             <name>Solana Validator</name>
@@ -114,8 +135,8 @@
                     <type>ZABBIX_ACTIVE</type>
                     <key>logrt[{$NMSLOGFILE},&quot;height=([0-9\.\-]*)&quot;,,,skip,\1,]</key>
                     <delay>{$NMSUPDATEINTERVAL}</delay>
-                    <history>5d</history>
-                    <trends>14d</trends>
+                    <history>30d</history>
+                    <trends>60d</trends>
                     <applications>
                         <application>
                             <name>Solana Validator</name>
@@ -127,8 +148,8 @@
                     <type>ZABBIX_ACTIVE</type>
                     <key>logrt[{$NMSLOGFILE},&quot;leaderSlots=([0-9\.\-]*)&quot;,,,skip,\1,]</key>
                     <delay>{$NMSUPDATEINTERVAL}</delay>
-                    <history>5d</history>
-                    <trends>14d</trends>
+                    <history>30d</history>
+                    <trends>60d</trends>
                     <applications>
                         <application>
                             <name>Solana Validator</name>
@@ -140,8 +161,8 @@
                     <type>ZABBIX_ACTIVE</type>
                     <key>logrt[{$NMSLOGFILE},&quot;nodes=([0-9\.\-]*)&quot;,,,skip,\1,]</key>
                     <delay>{$NMSUPDATEINTERVAL}</delay>
-                    <history>5d</history>
-                    <trends>14d</trends>
+                    <history>30d</history>
+                    <trends>60d</trends>
                     <applications>
                         <application>
                             <name>Solana Validator</name>
@@ -153,8 +174,8 @@
                     <type>ZABBIX_ACTIVE</type>
                     <key>logrt[{$NMSLOGFILE},&quot;pctNewerVersions=([0-9\.\-]*)&quot;,,,skip,\1,]</key>
                     <delay>{$NMSUPDATEINTERVAL}</delay>
-                    <history>5d</history>
-                    <trends>14d</trends>
+                    <history>30d</history>
+                    <trends>60d</trends>
                     <value_type>FLOAT</value_type>
                     <applications>
                         <application>
@@ -181,8 +202,8 @@
                     <type>ZABBIX_ACTIVE</type>
                     <key>logrt[{$NMSLOGFILE},&quot;pctSkipped=([0-9\.\-]*)&quot;,,,skip,\1,]</key>
                     <delay>{$NMSUPDATEINTERVAL}</delay>
-                    <history>5d</history>
-                    <trends>14d</trends>
+                    <history>30d</history>
+                    <trends>60d</trends>
                     <value_type>FLOAT</value_type>
                     <applications>
                         <application>
@@ -195,8 +216,8 @@
                     <type>ZABBIX_ACTIVE</type>
                     <key>logrt[{$NMSLOGFILE},&quot;pctSkippedDelta=([0-9\.\-]*)&quot;,,,skip,\1,]</key>
                     <delay>{$NMSUPDATEINTERVAL}</delay>
-                    <history>5d</history>
-                    <trends>14d</trends>
+                    <history>30d</history>
+                    <trends>60d</trends>
                     <value_type>FLOAT</value_type>
                     <applications>
                         <application>
@@ -209,8 +230,8 @@
                     <type>ZABBIX_ACTIVE</type>
                     <key>logrt[{$NMSLOGFILE},&quot;pctTotDelinquent=([0-9\.\-]*)&quot;,,,skip,\1,]</key>
                     <delay>{$NMSUPDATEINTERVAL}</delay>
-                    <history>5d</history>
-                    <trends>14d</trends>
+                    <history>30d</history>
+                    <trends>60d</trends>
                     <value_type>FLOAT</value_type>
                     <applications>
                         <application>
@@ -237,8 +258,8 @@
                     <type>ZABBIX_ACTIVE</type>
                     <key>logrt[{$NMSLOGFILE},&quot;pctTotSkipped=([0-9\.\-]*)&quot;,,,skip,\1,]</key>
                     <delay>{$NMSUPDATEINTERVAL}</delay>
-                    <history>5d</history>
-                    <trends>14d</trends>
+                    <history>30d</history>
+                    <trends>60d</trends>
                     <value_type>FLOAT</value_type>
                     <applications>
                         <application>
@@ -251,7 +272,7 @@
                     <type>ZABBIX_ACTIVE</type>
                     <key>logrt[{$NMSLOGFILE},&quot;status=(\w*)&quot;,,,skip,\1,]</key>
                     <delay>{$NMSUPDATEINTERVAL}</delay>
-                    <history>5d</history>
+                    <history>30d</history>
                     <trends>0</trends>
                     <value_type>CHAR</value_type>
                     <description>scriptstarted | error | up | active | delinquent&#13;
@@ -303,7 +324,7 @@ error can have various causes, typically the solana-validator process is down.</
                 <macro>
                     <macro>{$NMSNODEID}</macro>
                     <value>Solana</value>
-                    <description>Identifier for the node on the server (useful if more than one are hosted, or for designating testnet etc.).</description>
+                    <description>Identifier for the node on the server (useful if more than one are hosted).</description>
                 </macro>
                 <macro>
                     <macro>{$NMSTHRSHLDLEADERSLOTS}</macro>
@@ -525,12 +546,34 @@ error can have various causes, typically the solana-validator process is down.</
                             <application/>
                             <max_columns>3</max_columns>
                         </screen_item>
+                        <screen_item>
+                            <resourcetype>0</resourcetype>
+                            <style>0</style>
+                            <resource>
+                                <name>behind</name>
+                                <host>Template App Solana Validator</host>
+                            </resource>
+                            <width>500</width>
+                            <height>100</height>
+                            <x>1</x>
+                            <y>4</y>
+                            <colspan>1</colspan>
+                            <rowspan>1</rowspan>
+                            <elements>0</elements>
+                            <valign>0</valign>
+                            <halign>0</halign>
+                            <dynamic>0</dynamic>
+                            <sort_triggers>0</sort_triggers>
+                            <url/>
+                            <application/>
+                            <max_columns>3</max_columns>
+                        </screen_item>
                     </screen_items>
                 </screen>
                 <screen>
                     <name>Solana Metrics Mobile</name>
                     <hsize>1</hsize>
-                    <vsize>9</vsize>
+                    <vsize>10</vsize>
                     <screen_items>
                         <screen_item>
                             <resourcetype>0</resourcetype>
@@ -690,7 +733,7 @@ error can have various causes, typically the solana-validator process is down.</
                             <resourcetype>0</resourcetype>
                             <style>0</style>
                             <resource>
-                                <name>Time Elapsed</name>
+                                <name>behind</name>
                                 <host>Template App Solana Validator</host>
                             </resource>
                             <width>500</width>
@@ -712,13 +755,35 @@ error can have various causes, typically the solana-validator process is down.</
                             <resourcetype>0</resourcetype>
                             <style>0</style>
                             <resource>
-                                <name>balance</name>
+                                <name>Time Elapsed</name>
                                 <host>Template App Solana Validator</host>
                             </resource>
                             <width>500</width>
                             <height>100</height>
                             <x>0</x>
                             <y>8</y>
+                            <colspan>1</colspan>
+                            <rowspan>1</rowspan>
+                            <elements>0</elements>
+                            <valign>0</valign>
+                            <halign>0</halign>
+                            <dynamic>0</dynamic>
+                            <sort_triggers>0</sort_triggers>
+                            <url/>
+                            <application/>
+                            <max_columns>3</max_columns>
+                        </screen_item>
+                        <screen_item>
+                            <resourcetype>0</resourcetype>
+                            <style>0</style>
+                            <resource>
+                                <name>balance</name>
+                                <host>Template App Solana Validator</host>
+                            </resource>
+                            <width>500</width>
+                            <height>100</height>
+                            <x>0</x>
+                            <y>9</y>
                             <colspan>1</colspan>
                             <rowspan>1</rowspan>
                             <elements>0</elements>
@@ -770,7 +835,6 @@ error can have various causes, typically the solana-validator process is down.</
     <graphs>
         <graph>
             <name>% Newer Versions</name>
-            <type>STACKED</type>
             <graph_items>
                 <graph_item>
                     <sortorder>1</sortorder>
@@ -784,7 +848,6 @@ error can have various causes, typically the solana-validator process is down.</
         </graph>
         <graph>
             <name>% Skipped</name>
-            <type>STACKED</type>
             <graph_items>
                 <graph_item>
                     <sortorder>1</sortorder>
@@ -806,7 +869,6 @@ error can have various causes, typically the solana-validator process is down.</
         </graph>
         <graph>
             <name>% Skipped Delta</name>
-            <type>STACKED</type>
             <graph_items>
                 <graph_item>
                     <sortorder>1</sortorder>
@@ -820,7 +882,6 @@ error can have various causes, typically the solana-validator process is down.</
         </graph>
         <graph>
             <name>% Total Delinquent</name>
-            <type>STACKED</type>
             <graph_items>
                 <graph_item>
                     <sortorder>1</sortorder>
@@ -834,7 +895,6 @@ error can have various causes, typically the solana-validator process is down.</
         </graph>
         <graph>
             <name>Activated Stake</name>
-            <type>STACKED</type>
             <graph_items>
                 <graph_item>
                     <sortorder>1</sortorder>
@@ -848,7 +908,6 @@ error can have various causes, typically the solana-validator process is down.</
         </graph>
         <graph>
             <name>Average Slot Time</name>
-            <type>STACKED</type>
             <graph_items>
                 <graph_item>
                     <sortorder>1</sortorder>
@@ -874,8 +933,20 @@ error can have various causes, typically the solana-validator process is down.</
             </graph_items>
         </graph>
         <graph>
+            <name>behind</name>
+            <graph_items>
+                <graph_item>
+                    <sortorder>1</sortorder>
+                    <color>199C0D</color>
+                    <item>
+                        <host>Template App Solana Validator</host>
+                        <key>logrt[{$NMSLOGFILE},&quot;behind=([0-9\.\-]*)&quot;,,,skip,\1,]</key>
+                    </item>
+                </graph_item>
+            </graph_items>
+        </graph>
+        <graph>
             <name>Nodes</name>
-            <type>STACKED</type>
             <graph_items>
                 <graph_item>
                     <sortorder>1</sortorder>
@@ -889,7 +960,6 @@ error can have various causes, typically the solana-validator process is down.</
         </graph>
         <graph>
             <name>Time Elapsed</name>
-            <type>STACKED</type>
             <graph_items>
                 <graph_item>
                     <sortorder>1</sortorder>
@@ -903,4 +973,3 @@ error can have various causes, typically the solana-validator process is down.</
         </graph>
     </graphs>
 </zabbix_export>
-
