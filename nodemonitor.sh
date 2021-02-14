@@ -90,7 +90,7 @@ while true; do
         #avgBlockTime=$(echo "scale=2 ; $(expr $blockHeightTime - $($cli block-time --url $rpcURL --output json-compact $(expr $blockHeight - $slotinterval) | jq -r '.timestamp')) / $slotinterval" | bc)
         now=$(date --rfc-3339=$dateprecision)
         if [ -n "$blockHeightTime" ]; then blockHeightFromNow=$(( $(date +%s) - $blockHeightTime)); fi
-        logentry="height=${blockHeight} elapsed=${blockHeightFromNow} behind=${behind}"
+        logentry="height=${blockHeight} elapsed=${blockHeightFromNow}"
         if [ "$validatorChecks" == "on" ]; then
            if [ -n "$delinquentValidatorInfo" ]; then
               status=delinquent
@@ -148,9 +148,9 @@ while true; do
               logentry="$logentry version=$version pctNewerVersions=$pctNewerVersions balance=$balance activatedStake=$activatedStakeDisplay credits=$credits commission=$commission"
            else status=error; fi
         else
-        slotHeight=$($cli slot --commitment singleGossip) # this should query the cluster
-        if [[ -n "$slotHeight" && -n "$blockHeight" ]]; then behind=$(($slotHeight - $blockHeight));else behind=""; fi
-        logentry="$logentry behind=$behind"
+           slotHeight=$($cli slot --commitment singleGossip) # this should query the cluster
+           if [[ -n "$slotHeight" && -n "$blockHeight" ]]; then behind=$(($slotHeight - $blockHeight));else behind=""; fi
+           logentry="$logentry behind=$behind"
         fi
         avgSlotTime=""
         if [ "$additionalInfo" == "on" ]; then
