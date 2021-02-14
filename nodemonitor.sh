@@ -74,7 +74,6 @@ echo "[$date] status=scriptstarted" >>$logfile
 
 while true; do
     validatorBlockTime=$($cli block-time --url  $rpcURL --output json-compact $($cli slot --commitment max --url  $rpcURL))
-    slotHeight=$($cli slot --commitment singleGossip) # this should query the cluster
     #validatorBlockTime=$($cli block-time --url $rpcURL --output json-compact)
     validatorBlockTimeTest=$(echo $validatorBlockTime | grep -c "timestamp")
     if [ "$validatorChecks" == "on" ]; then
@@ -89,13 +88,14 @@ while true; do
         blockHeight=$(jq -r '.slot' <<<$validatorBlockTime)
         blockHeightTime=$(jq -r '.timestamp' <<<$validatorBlockTime)
         #avgBlockTime=$(echo "scale=2 ; $(expr $blockHeightTime - $($cli block-time --url $rpcURL --output json-compact $(expr $blockHeight - $slotinterval) | jq -r '.timestamp')) / $slotinterval" | bc)
-        if [[ -n "$slotHeight" && -n "$blockHeight" ]]; then behind=$(($slotHeight - $blockHeight));else behind=""; fi
         now=$(date --rfc-3339=$dateprecision)
         if [ -n "$blockHeightTime" ]; then blockHeightFromNow=$(( $(date +%s) - $blockHeightTime)); fi
         logentry="height=${blockHeight} elapsed=${blockHeightFromNow} behind=${behind}"
         if [ "$validatorChecks" == "on" ]; then
            if [ -n "$delinquentValidatorInfo" ]; then
               status=delinquent
+              slotHeight=$($cli slot --commitment singleGossip) # this should query the cluster
+              if [[ -n "$slotHeight" && -n "$blockHeight" ]]; then behind=$(($slotHeight - $blockHeight));else behind=""; fi
               activatedStake=$(jq -r '.activatedStake' <<<$delinquentValidatorInfo)
               activatedStakeDisplay=$activatedStake
               if [ "$format" == "SOL" ]; then activatedStakeDisplay=$(echo "scale=2 ; $activatedStake / 1000000000.0" | bc); fi
@@ -103,9 +103,11 @@ while true; do
               version=$(jq -r '.version' <<<$delinquentValidatorInfo | sed 's/ /-/g')
               rootSlot=$(jq -r '.rootSlot' <<<$delinquentValidatorInfo)
               lastVote=$(jq -r '.lastVote' <<<$delinquentValidatorInfo)
-              logentry="$logentry rootSlot=$rootSlot lastVote=$lastVote credits=$credits activatedStake=$activatedStakeDisplay version=$version"
+              logentry="$logentry behind=$behind rootSlot=$rootSlot lastVote=$lastVote credits=$credits activatedStake=$activatedStakeDisplay version=$version"
            elif [ -n "$currentValidatorInfo" ]; then
               status=validating
+              slotHeight=$($cli slot --commitment singleGossip --url $rpcURL)
+              if [[ -n "$slotHeight" && -n "$blockHeight" ]]; then behind=$(($slotHeight - $blockHeight));else behind=""; fi
               balance=$($cli account $identityPubkey --url $rpcURL --output json-compact)
               balance=$(jq -r '.account.lamports' <<<$balance)
               activatedStake=$(jq -r '.activatedStake' <<<$currentValidatorInfo)
@@ -142,9 +144,13 @@ while true; do
               totalCurrentStake=$(jq -r '.totalCurrentStake' <<<$validators)
               #pctVersionActive=$(echo "scale=2 ; 100 * $versionActiveStake / $totalCurrentStake" | bc)
               pctNewerVersions=$(echo "scale=2 ; 100 * $stakeNewerVersions / $totalCurrentStake" | bc)
-              logentry="$logentry leaderSlots=$leaderSlots skippedSlots=$skippedSlots pctSkipped=$pctSkipped pctTotSkipped=$pctTotSkipped pctSkippedDelta=$pctSkippedDelta pctTotDelinquent=$pctTotDelinquent"
+              logentry="$logentry behind=$behind leaderSlots=$leaderSlots skippedSlots=$skippedSlots pctSkipped=$pctSkipped pctTotSkipped=$pctTotSkipped pctSkippedDelta=$pctSkippedDelta pctTotDelinquent=$pctTotDelinquent"
               logentry="$logentry version=$version pctNewerVersions=$pctNewerVersions balance=$balance activatedStake=$activatedStakeDisplay credits=$credits commission=$commission"
            else status=error; fi
+        else
+        slotHeight=$($cli slot --commitment singleGossip) # this should query the cluster
+        if [[ -n "$slotHeight" && -n "$blockHeight" ]]; then behind=$(($slotHeight - $blockHeight));else behind=""; fi
+        logentry="$logentry behind=$behind"
         fi
         avgSlotTime=""
         if [ "$additionalInfo" == "on" ]; then
