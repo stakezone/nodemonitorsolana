@@ -10,16 +10,16 @@
 configDir=""           # the directory for the config files, eg.: '$HOME/.config/solana'
 ### optional:          #
 identityPubkey=""      # identity pubkey for the validator, insert if autodiscovery fails
-voteAccount=""         # vote account address for the validator, specify if there are more than 1
-sleep1="30"              # polls every sleep1 sec, please use a number value for seconds in order to enable proper interval calculation
+voteAccount=""         # vote account address for the validator, specify if there are more than one
+sleep1="30"            # polls every sleep1 sec, please use a number value in seconds in order to enable proper interval calculation
 slotinterval="$((4 * $sleep1))"     # interval of slots for calculating a meaningful average slot time, can be overridden with static value
 validatorChecks="on"   # set to 'on' for obtaining validator metrics, will be autodiscovered to 'off' when flag --no-voting is set
 additionalInfo="on"    # set to 'on' for additional general metrics
 binDir=""              # auto detection of the solana binary directory can fail or an alternative custom inst>
-rpcURL=""              # default is localhost with port number autodiscovered, alternatively it can be specified like http://custom.rpc.com:>
-format="SOL"           # amounts shown in 'SOL' instead of lamports
-logname=""             # a custom monitor log file name can be chosen, if left empty default is nodecheck-<username>.log
-logpath="$(pwd)"       # the directory where the log file is stored, for customization insert path like: /my/path
+rpcURL=""              # default is localhost with port number autodiscovered, alternatively it can be specified like 'http://custom.rpc.com:8899'
+format="SOL"           # amounts shown in 'SOL' instead of Lamports, when choosing Lamports dependent trigger amounts need to be adjusted
+logname=""             # a custom monitor log file name can be chosen, if left empty default is 'nodecheck-<username>.log'
+logpath="$(pwd)"       # the directory where the log file is stored, for customization insert path like: '/my/path'
 logsize=200            # the max number of lines after that the log gets truncated to reduce its size
 dateprecision="seconds"      # precision for date format, can be seconds or ns (for nano seconds)
 colorI='\033[0;32m'    # black 30, red 31, green 32, yellow 33, blue 34, magenta 35, cyan 36, white 37
