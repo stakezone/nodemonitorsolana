@@ -10,13 +10,13 @@
 configDir=""           # the directory for the config files, eg.: '$HOME/.config/solana'
 ### optional:          #
 identityPubkey=""      # identity pubkey for the validator, insert if autodiscovery fails
-voteAccount=""         # vote account address for the validator, specify if there are more than one or if autodiscovery fails
-sleep1=30              # polls every sleep1 sec, please use a number value for seconds in order to enable proper interval calculation
+voteAccount=""         # vote account address for the validator, specify if there are more than >
+sleep1=""              # polls every sleep1 sec, please use a number value for seconds in order to enable proper interval calculation
 slotinterval="$((4 * $sleep1))"     # interval of slots for calculating a meaningful average slot time, can be overridden with static value
 validatorChecks="on"   # set to 'on' for obtaining validator metrics, will be autodiscovered to 'off' when flag --no-voting is set
 additionalInfo="on"    # set to 'on' for additional general metrics
-binDir=""              # auto detection of the solana binary directory can fail or an alternative custom installation is preferred, in case insert like $HOME/solana/target/release
-rpcURL=""              # default is localhost with port number autodiscovered, alternatively it can be specified like http://custom.rpc.com:port
+binDir=""              # auto detection of the solana binary directory can fail or an alternative custom inst>
+rpcURL=""              # default is localhost with port number autodiscovered, alternatively it can be specified like http://custom.rpc.com:>
 format="SOL"           # amounts shown in 'SOL' instead of lamports
 logname=""             # a custom monitor log file name can be chosen, if left empty default is nodecheck-<username>.log
 logpath="$(pwd)"       # the directory where the log file is stored, for customization insert path like: /my/path
@@ -89,8 +89,8 @@ while true; do
         blockHeightTime=$(jq -r '.timestamp' <<<$validatorBlockTime)
         #avgBlockTime=$(echo "scale=2 ; $(expr $blockHeightTime - $($cli block-time --url $rpcURL --output json-compact $(expr $blockHeight - $slotinterval) | jq -r '.timestamp')) / $slotinterval" | bc)
         now=$(date --rfc-3339=$dateprecision)
-        if [ -n "$blockHeightTime" ]; then blockHeightFromNow=$(( $(date +%s) - $blockHeightTime)); fi
-        logentry="height=${blockHeight} elapsed=${blockHeightFromNow}"
+        if [ -n "$blockHeightTime" ]; then elapsed=$(( $(date +%s) - $blockHeightTime)); fi
+        logentry="height=${blockHeight} elapsed=$elapsed"
         if [ "$validatorChecks" == "on" ]; then
            if [ -n "$delinquentValidatorInfo" ]; then
               status=delinquent
@@ -148,7 +148,8 @@ while true; do
               logentry="$logentry version=$version pctNewerVersions=$pctNewerVersions balance=$balance activatedStake=$activatedStakeDisplay credits=$credits commission=$commission"
            else status=error; fi
         else
-           slotHeight=$($cli slot --commitment singleGossip) # this should query the cluster
+           if [ "$elapsed" -gt 80 ]; then entry1="--url $rpcURL"; else entry1=""; fi
+           slotHeight=$($cli slot $entry1 --commitment singleGossip)
            if [[ -n "$slotHeight" && -n "$blockHeight" ]]; then behind=$(($slotHeight - $blockHeight));else behind=""; fi
            logentry="$logentry behind=$behind"
         fi
