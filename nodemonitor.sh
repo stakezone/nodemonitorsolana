@@ -77,7 +77,7 @@ while true; do
     #validatorBlockTime=$($cli block-time --url $rpcURL --output json-compact)
     validatorBlockTimeTest=$(echo $validatorBlockTime | grep -c "timestamp")
     if [ "$validatorChecks" == "on" ]; then
-       blockProduction=$($cli block-production --url $rpcURL --output json-compact)
+       blockProduction=$(tail -n1 <<<$($cli block-production --url $rpcURL --output json-compact))
        validatorBlockProduction=$(jq -r '.leaders[] | select(.identityPubkey == '\"$identityPubkey\"')' <<<$blockProduction)
        validators=$($cli validators --url $rpcURL --output json-compact)
        currentValidatorInfo=$(jq -r '.currentValidators[] | select(.voteAccountPubkey == '\"$voteAccount\"')' <<<$validators)
