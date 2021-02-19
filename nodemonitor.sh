@@ -7,7 +7,7 @@
 ###    if suppressing error messages is preferred, run as './nodemonitor.sh 2> /dev/null'
 
 ###    CONFIG    ##################################################################################################
-configDir=""           # the directory for the config files, eg.: '$HOME/.config/solana'
+CONFIGDIR=""           # the directory for the config files, eg.: '$HOME/.config/solana'
 ### optional:          #
 IDENTITYPUBKEY=""      # identity pubkey for the validator, insert if autodiscovery fails
 VOTEACCOUNT=""         # vote account address for the validator, specify if there are more than one
@@ -34,9 +34,9 @@ noColor='\033[0m'      # no color
 if [ -n  "$BINDIR" ]; then
    cli="timeout --kill-after=8 6 ${BINDIR}/solana"
 else
-   if [ -z "$configDir" ]; then echo "please configure the config directory"; exit 1; fi
-   installDir="$(cat ${configDir}/install/config.yml | grep 'active_release_dir\:' | awk '{print $2}')/bin"
-   if [ -n "$installDir" ]; then cli="${installDir}/solana"; else echo "please configure the cli manually or check the configDir setting"; exit 1; fi
+   if [ -z "$CONFIGDIR" ]; then echo "please configure the config directory"; exit 1; fi
+   installDir="$(cat ${CONFIGDIR}/install/config.yml | grep 'active_release_dir\:' | awk '{print $2}')/bin"
+   if [ -n "$installDir" ]; then cli="${installDir}/solana"; else echo "please configure the cli manually or check the CONFIGDIR setting"; exit 1; fi
 fi
 
 if [ -z "$RPCURL" ]; then
