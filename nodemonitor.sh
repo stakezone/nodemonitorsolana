@@ -65,8 +65,8 @@ echo "identity pubkey: ${IDENTITYPUBKEY}"
 echo "vote account: ${VOTEACCOUNT}"
 echo ""
 
-validatorCheck=$($cli validators --url $RPCURL)
-if [ $(grep -c $VOTEACCOUNT <<< $validatorCheck) == 0  ] && [ "$VALIDATORCHECKS" == "on" ] && [ -z "$IDENTITYPUBKEY" &&  -z "$VOTEACCOUNT" ]; then echo "validator not found in set"; exit 1; fi
+validatorCheck="$($cli validators --url $RPCURL)"
+if [ $(grep -c $VOTEACCOUNT <<< "$validatorCheck") == 0  ] && [ "$VALIDATORCHECKS" == "on" ] && [ -z "$IDENTITYPUBKEY" &&  -z "$VOTEACCOUNT" ]; then echo "validator not found in set"; exit 1; fi
 
 nloglines=$(wc -l <$logfile)
 if [ $nloglines -gt $LOGSIZE ]; then sed -i "1,$(($nloglines - $LOGSIZE))d" $logfile; fi # the log file is trimmed for LOGSIZE
