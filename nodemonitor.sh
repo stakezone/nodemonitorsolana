@@ -65,8 +65,8 @@ echo "identity pubkey: ${IDENTITYPUBKEY}"
 echo "vote account: ${VOTEACCOUNT}"
 echo ""
 
-validatorCheck="$($cli validators --url $RPCURL)"
-if [ $(grep -c $VOTEACCOUNT <<< "$validatorCheck") == 0  ] && [ "$VALIDATORCHECKS" == "on" ] && [[ -z "$IDENTITYPUBKEY" &&  -z "$VOTEACCOUNT" ]]; then echo "validator not found in set"; exit 1; fi
+validatorCheck=$($cli validators --url $RPCURL)
+if [ $(grep -c $VOTEACCOUNT <<< $validatorCheck) == 0  ] && [ "$VALIDATORCHECKS" == "on" ] && [[ -z "$IDENTITYPUBKEY" &&  -z "$VOTEACCOUNT" ]]; then echo "validator not found in set"; exit 1; fi
 
 nloglines=$(wc -l <$logfile)
 if [ $nloglines -gt $LOGSIZE ]; then sed -i "1,$(($nloglines - $LOGSIZE))d" $logfile; fi # the log file is trimmed for LOGSIZE
@@ -167,16 +167,18 @@ while true; do
            pctEpochElapsed=$(echo "scale=2 ; 100 * $(jq -r '.slotIndex' <<<$epochInfo) / $(jq -r '.slotsInEpoch' <<<$epochInfo)" | bc)
            logentry="$logentry avgSlotTime=$avgSlotTime nodes=$nodes epoch=$epoch pctEpochElapsed=$pctEpochElapsed"
         fi
-        logentry="[$now] status=$status $logentry"
+        variables="status=$status $logentry"
+        logentry="[$now] $variables"
         echo "$logentry" >>$logfile
     else
         now=$(date --rfc-3339=$TIMEPRECISION)
         status="error"
-        logentry="[$now] status=$status"
+        variables="status=$status"
+        logentry="[$now] $variables"
         echo "$logentry" >>$logfile
     fi
 
-	 nloglines=$(wc -l <$logfile)
+         nloglines=$(wc -l <$logfile)
     if [ $nloglines -gt $LOGSIZE ]; then
        case $LOGROTATION in
           1)
@@ -192,7 +194,7 @@ while true; do
              ;;
         esac
     fi
-	
+
     case $status in
        validating|up)
           color=$colorI
@@ -216,8 +218,8 @@ while true; do
     for var in $variables; do
        var_=$(grep -Po '^[0-9a-zA-Z_-]*' <<<$var); var_="$var_=\"\""; variables_="$var_; $variables_"
     done
-    # echo $variables_
+    #echo $variables_
     eval $variables_
-	
+
     sleep $SLEEP1
 done
