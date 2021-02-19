@@ -21,7 +21,7 @@ FORMAT="SOL"           # amounts shown in 'SOL' instead of 'Lamports', when choo
 LOGNAME=""             # a custom monitor log file name can be chosen, if left empty default is 'nodecheck-<username>.log'
 LOGPATH="$(pwd)"       # the directory where the log file is stored, for customization insert path like: '/my/path'
 LOGSIZE="200"          # the max number of lines after that the log gets truncated to reduce its size
-LOGROTATION="3"        # options for log rotation: (1) rotate to $LOGNAME.1 every $LOGSIZE lines;  (2) append to $LOGNAME.1 every $LOGSIZE lines; (3) truncate $logfile to $LOGSIZE every iteration
+LOGROTATION="1"        # options for log rotation: (1) rotate to $LOGNAME.1 every $LOGSIZE lines;  (2) append to $LOGNAME.1 every $LOGSIZE lines; (3) truncate $logfile to $LOGSIZE every iteration
 TIMEPRECISION="seconds"      # precision for date format, can be seconds or ns (for nano seconds)
 ### internal:          #
 colorI='\033[0;32m'    # black 30, red 31, green 32, yellow 33, blue 34, magenta 35, cyan 36, white 37
