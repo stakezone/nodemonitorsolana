@@ -40,9 +40,11 @@ The script for the host has a configuration section on top where parameters can 
 
 A Zabbix server is required that connects to the host running the Solana validator. On the host side the Zabbix agent needs to be installed and configured for active mode. There is various information on the Zabbix site and from other sources that explains how to connect a host to the server and utilize the standard Linux OS templates for general monitoring. Once these steps are completed the Solana Validator template file can be imported. Under `All templates/Template App Solana Validator` there is a `Macros` section with several parameters that can be configured, in particular the path to the log file must be set. Do not change those values there, instead go to `Hosts` and select the particular host, then go to `Macros`, then to `Inherited and host macros`. There the macros from the generic template are mirrored for the specific host and can be set without affecting other hosts using the same template.
 
-Additional useful templates for GPU and S.M.A.R.T monitoring are available from the Zabbix site.
+Additional useful templates for GPU and SMART monitoring are available from the Zabbix site.
 
 ### New
+
+More options for logfile management (option 1 or 2 recommended use with Zabbix)
 
 'behind' added as a measure of slot distance from the cluster height.
 
