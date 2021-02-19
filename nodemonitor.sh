@@ -49,8 +49,8 @@ noVoting=$(ps aux | grep solana-validator | grep -c "\-\-no\-voting")
 if [ "$noVoting" -eq 0 ]; then
    if [ -z "$IDENTITYPUBKEY" ]; then IDENTITYPUBKEY=$($cli address --url $RPCURL); fi
    if [ -z "$IDENTITYPUBKEY" ]; then echo "auto-detection failed, please configure the IDENTITYPUBKEY in the script if not done"; exit 1; fi
-   if [ -z "$VOTEACCOUNT" ]; then VOTEACCOUNT=$($cli validators --url $RPCURL --output json-compact | jq -r '.currentValidators[] | select(.IDENTITYPUBKEY == '\"$IDENTITYPUBKEY\"') | .VOTEACCOUNTPubkey'); fi
-   if [ -z "$VOTEACCOUNT" ]; then VOTEACCOUNT=$($cli validators --url $RPCURL --output json-compact | jq -r '.delinquentValidators[] | select(.IDENTITYPUBKEY == '\"$IDENTITYPUBKEY\"') | .VOTEACCOUNTPubkey'); fi
+   if [ -z "$VOTEACCOUNT" ]; then VOTEACCOUNT=$($cli validators --url $RPCURL --output json-compact | jq -r '.currentValidators[] | select(.identityPubkey == '\"$IDENTITYPUBKEY\"') | .voteAccountPubkey'); fi
+   if [ -z "$VOTEACCOUNT" ]; then VOTEACCOUNT=$($cli validators --url $RPCURL --output json-compact | jq -r '.delinquentValidators[] | select(.identityPubkey == '\"$IDENTITYPUBKEY\"') | .voteAccountPubkey'); fi
    if [ -z "$VOTEACCOUNT" ]; then echo "please configure the vote account in the script or wait for availability upon starting the node"; exit 1; fi
 else VALIDATORCHECKS="off"; fi
 
@@ -80,10 +80,10 @@ while true; do
     validatorBlockTimeTest=$(echo $validatorBlockTime | grep -c "timestamp")
     if [ "$VALIDATORCHECKS" == "on" ]; then
        blockProduction=$(tail -n1 <<<$($cli block-production --url $RPCURL --output json-compact))
-       validatorBlockProduction=$(jq -r '.leaders[] | select(.IDENTITYPUBKEY == '\"$IDENTITYPUBKEY\"')' <<<$blockProduction)
+       validatorBlockProduction=$(jq -r '.leaders[] | select(.identityPubkey == '\"$IDENTITYPUBKEY\"')' <<<$blockProduction)
        validators=$($cli validators --url $RPCURL --output json-compact)
-       currentValidatorInfo=$(jq -r '.currentValidators[] | select(.VOTEACCOUNTPubkey == '\"$VOTEACCOUNT\"')' <<<$validators)
-       delinquentValidatorInfo=$(jq -r '.delinquentValidators[] | select(.VOTEACCOUNTPubkey == '\"$VOTEACCOUNT\"')' <<<$validators)
+       currentValidatorInfo=$(jq -r '.currentValidators[] | select(.voteAccountPubkey == '\"$VOTEACCOUNT\"')' <<<$validators)
+       delinquentValidatorInfo=$(jq -r '.delinquentValidators[] | select(.voteAccountPubkey == '\"$VOTEACCOUNT\"')' <<<$validators)
     fi
     if [[ ((-n "$currentValidatorInfo" || "$delinquentValidatorInfo" ) && "$VALIDATORCHECKS" == "on")  ]] || [[ ("$validatorBlockTimeTest" -eq "1" && "$VALIDATORCHECKS" != "on") ]]; then
         status="up"
