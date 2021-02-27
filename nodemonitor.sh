@@ -32,7 +32,7 @@ noColor='\033[0m'      # no color
 ###  END CONFIG  ##################################################################################################
 
 if [ -n  "$BINDIR" ]; then
-   cli="timeout --kill-after=8 6 ${BINDIR}/solana"
+   cli="timeout -k 8 6 ${BINDIR}/solana"
 else
    if [ -z "$CONFIGDIR" ]; then echo "please configure the config directory"; exit 1; fi
    installDir="$(cat ${CONFIGDIR}/install/config.yml | grep 'active_release_dir\:' | awk '{print $2}')/bin"
@@ -140,6 +140,8 @@ while true; do
               #versionActiveStake=$(jq -r '.stakeByVersion.'\"$version\"'.currentActiveStake' <<<$validators)
               stakeByVersion=$(jq -r '.stakeByVersion' <<<$validators)
               stakeByVersion=$(jq -r 'to_entries | map_values(.value + { version: .key })' <<<$stakeByVersion)
+              stakeByVersion=$(jq -r 'map(if .version == "unknown" then .version="1.0.0" else . end)' <<<$stakeByVersion)
+              stakeByVersion=$(jq -r 'sort_by(.version | split(".") | map(tonumber))' <<<$stakeByVersion)
               nextVersionIndex=$(( $(jq -r 'map(.version == '\"$version\"') | index(true)' <<<$stakeByVersion) + 1))
               stakeByVersion=$(jq '.['$nextVersionIndex':]' <<<$stakeByVersion)
               stakeNewerVersions=$(jq -s 'map(.[].currentActiveStake) | add' <<<$stakeByVersion)
@@ -178,7 +180,7 @@ while true; do
         echo "$logentry" >>$logfile
     fi
 
-         nloglines=$(wc -l <$logfile)
+    nloglines=$(wc -l <$logfile)
     if [ $nloglines -gt $LOGSIZE ]; then
        case $LOGROTATION in
           1)
