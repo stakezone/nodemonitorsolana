@@ -12,7 +12,7 @@ CONFIGDIR=""           # the directory for the config files, eg.: '$HOME/.config
 IDENTITYPUBKEY=""      # identity pubkey for the validator, insert if autodiscovery fails
 VOTEACCOUNT=""         # vote account address for the validator, specify if there are more than one
 SLEEP1="30"            # polls every SLEEP1 sec, please use a number value in seconds in order to enable proper interval calculation
-SLOTINTERVAL="$((4 * $SLEEP1))"     # interval of slots for calculating a meaningful average slot time, can be overridden with static value
+SLOTINTERVAL=""        # interval of slots for calculating a meaningful average slot time, leave empty for 'SLEEP1', can be overridden with static value or like '$((4 * $SLEEP1))'
 VALIDATORCHECKS="on"   # set to 'on' for obtaining validator metrics, will be autodiscovered to 'off' when flag '--no-voting' is set
 ADDITIONALMETRICS="on" # set to 'on' for additional general metrics
 BINDIR=""              # auto detection of the solana binary directory can fail or an alternative custom inst>
@@ -22,7 +22,7 @@ LOGNAME=""             # a custom monitor log file name can be chosen, if left e
 LOGPATH="$(pwd)"       # the directory where the log file is stored, for customization insert path like: '/my/path'
 LOGSIZE="200"          # the max number of lines after that the log gets truncated to reduce its size
 LOGROTATION="1"        # options for log rotation: (1) rotate to $LOGNAME.1 every $LOGSIZE lines;  (2) append to $LOGNAME.1 every $LOGSIZE lines; (3) truncate $logfile to $LOGSIZE every iteration
-TIMEPRECISION="seconds"      # precision for date format, can be seconds or ns (for nano seconds)
+TIMEPRECISION="seconds"# precision for date format, can be seconds or ns (for nano seconds)
 ### internal:          #
 colorI='\033[0;32m'    # black 30, red 31, green 32, yellow 33, blue 34, magenta 35, cyan 36, white 37
 colorD='\033[0;90m'    # for light color 9 instead of 3
@@ -101,11 +101,10 @@ while true; do
               activatedStake=$(jq -r '.activatedStake' <<<$delinquentValidatorInfo)
               activatedStakeDisplay=$activatedStake
               if [ "$FORMAT" == "SOL" ]; then activatedStakeDisplay=$(echo "scale=2 ; $activatedStake / 1000000000.0" | bc); fi
-              credits=$(jq -r '.credits' <<<$delinquentValidatorInfo)
               version=$(jq -r '.version' <<<$delinquentValidatorInfo | sed 's/ /-/g')
               rootSlot=$(jq -r '.rootSlot' <<<$delinquentValidatorInfo)
               lastVote=$(jq -r '.lastVote' <<<$delinquentValidatorInfo)
-              logentry="$logentry behind=$behind rootSlot=$rootSlot lastVote=$lastVote credits=$credits activatedStake=$activatedStakeDisplay version=$version"
+              logentry="$logentry behind=$behind rootSlot=$rootSlot lastVote=$lastVote activatedStake=$activatedStakeDisplay version=$version"
            elif [ -n "$currentValidatorInfo" ]; then
               status=validating
               slotHeight=$($cli slot --commitment singleGossip --url $RPCURL)
@@ -159,9 +158,15 @@ while true; do
         fi
         avgSlotTime=""
         if [ "$ADDITIONALMETRICS" == "on" ]; then
-           if [ -n "$blockHeightTime" ]; then
-              if [ -n "$blockHeight" ]; then SLOTINTERVALTime=$($cli block-time --url $RPCURL --output json-compact $(( $blockHeight - $SLOTINTERVAL)) | jq -r '.timestamp'); fi
-              if [ -n "$SLOTINTERVALTime" ]; then avgSlotTime=$(echo "scale=2 ; ($blockHeightTime - $SLOTINTERVALTime) / $SLOTINTERVAL" | bc); fi
+           if [ "$SLOTINTERVAL" = "" ]; then
+              if [[ -n "$blockHeightTime_"  && -n "$blockHeight_" ]]; then avgSlotTime=$(echo "scale=2 ; ($blockHeightTime - $blockHeightTime_) / ($blockHeight - $blockHeight_)" | bc); fi
+              blockHeightTime_=$blockHeightTime
+              blockHeight_=$blockHeight
+           else
+              if [ -n "$blockHeightTime" ]; then
+                 if [ -n "$blockHeight" ]; then slotIntervalTime=$($cli block-time --url $RPCURL --output json-compact $(( $blockHeight - $SLOTINTERVAL)) | jq -r '.timestamp'); fi
+                 if [ -n "$slotIntervalTime" ]; then avgSlotTime=$(echo "scale=2 ; ($blockHeightTime - $slotIntervalTime) / $SLOTINTERVAL" | bc); fi
+              fi
            fi
            nodes=$($cli gossip --url $RPCURL | grep -Po "Nodes:\s+\K[0-9]+")
            epochInfo=$($cli epoch-info --url $RPCURL --output json-compact)
