@@ -159,7 +159,7 @@ while true; do
         avgSlotTime=""
         if [ "$ADDITIONALMETRICS" == "on" ]; then
            if [ "$SLOTINTERVAL" = "" ]; then
-              if [[ -n "$blockHeightTime_"  && -n "$blockHeight_" ]]; then avgSlotTime=$(echo "scale=2 ; ($blockHeightTime - $blockHeightTime_) / ($blockHeight - $blockHeight_)" | bc); fi
+              if [[ -n "$blockHeightTime"  && -n "$blockHeightTime_" && -n "$blockHeight" && -n "$blockHeight_" ]]; then avgSlotTime=$(echo "scale=2 ; ($blockHeightTime - $blockHeightTime_) / ($blockHeight - $blockHeight_)" | bc); fi
               blockHeightTime_=$blockHeightTime
               blockHeight_=$blockHeight
            else
