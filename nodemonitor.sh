@@ -22,7 +22,7 @@ LOGNAME=""             # a custom monitor log file name can be chosen, if left e
 LOGPATH="$(pwd)"       # the directory where the log file is stored, for customization insert path like: '/my/path'
 LOGSIZE="200"          # the max number of lines after that the log gets truncated to reduce its size
 LOGROTATION="1"        # options for log rotation: (1) rotate to $LOGNAME.1 every $LOGSIZE lines;  (2) append to $LOGNAME.1 every $LOGSIZE lines; (3) truncate $logfile to $LOGSIZE every iteration
-TIMEPRECISION="seconds"# precision for date format, can be seconds or ns (for nano seconds)
+TIMEFORMAT="seconds"   # precision for date format, can be seconds or ns (for nano seconds)
 ### internal:          #
 colorI='\033[0;32m'    # black 30, red 31, green 32, yellow 33, blue 34, magenta 35, cyan 36, white 37
 colorD='\033[0;90m'    # for light color 9 instead of 3
@@ -71,7 +71,7 @@ if [ $(grep -c $VOTEACCOUNT <<< $validatorCheck) == 0  ] && [ "$VALIDATORCHECKS"
 nloglines=$(wc -l <$logfile)
 if [ $nloglines -gt $LOGSIZE ]; then sed -i "1,$(($nloglines - $LOGSIZE))d" $logfile; fi # the log file is trimmed for LOGSIZE
 
-date=$(date --rfc-3339=$TIMEPRECISION)
+date=$(date --rfc-3339=$TIMEFORMAT)
 echo "[$date] status=scriptstarted" >>$logfile
 
 while true; do
@@ -90,7 +90,7 @@ while true; do
         blockHeight=$(jq -r '.slot' <<<$validatorBlockTime)
         blockHeightTime=$(jq -r '.timestamp' <<<$validatorBlockTime)
         #avgBlockTime=$(echo "scale=2 ; $(expr $blockHeightTime - $($cli block-time --url $RPCURL --output json-compact $(expr $blockHeight - $SLOTINTERVAL) | jq -r '.timestamp')) / $SLOTINTERVAL" | bc)
-        now=$(date --rfc-3339=$TIMEPRECISION)
+        now=$(date --rfc-3339=$TIMEFORMAT)
         if [ -n "$blockHeightTime" ]; then elapsed=$(( $(date +%s) - $blockHeightTime)); fi
         logentry="height=${blockHeight} elapsed=$elapsed"
         if [ "$VALIDATORCHECKS" == "on" ]; then
@@ -178,14 +178,14 @@ while true; do
         logentry="[$now] $variables"
         echo "$logentry" >>$logfile
     else
-        now=$(date --rfc-3339=$TIMEPRECISION)
+        now=$(date --rfc-3339=$TIMEFORMAT)
         status="error"
         variables="status=$status"
         logentry="[$now] $variables"
         echo "$logentry" >>$logfile
     fi
 
-    nloglines=$(wc -l <$logfile)
+         nloglines=$(wc -l <$logfile)
     if [ $nloglines -gt $LOGSIZE ]; then
        case $LOGROTATION in
           1)
