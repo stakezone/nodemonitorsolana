@@ -9,13 +9,13 @@ A complete log file based Solana validator uptime monitoring solution for Zabbix
 nodemonitor.sh generates human-readable logs that look like:
 
 `
-[2020-12-26 19:13:45-05:00] status=validating height=57554659 elapsed=35 behind=36 lastVote=57554703 rootSlot=57554660 leaderSlots=488 skippedSlots=131 pctSkipped=26.84 pctTotSkipped=29.33 pctSkippedDelta=-8.48 pctTotDelinquent=1.68 version=1.4.19 pctNewerVersions=0 balance=278.12 activatedStake=701169.33 credits=49487265 commission=0 avgSlotTime=.48 nodes=499 epoch=133 pctEpochElapsed=22.85`
+[2020-12-26 19:13:45-05:00] status=validating height=57554659 elapsed=35 behind=36 lastVote=57554703 rootSlot=57554660 leaderSlots=488 skippedSlots=131 pctSkipped=26.84 pctTotSkipped=29.33 pctSkippedDelta=-8.48 pctTotDelinquent=1.68 version=1.4.19 pctNewerVersions=0 balance=278.12 activatedStake=701169.33 credits=49487265 commission=0 outstandingVotes=1 avgSlotTime=.48 tps=681 nodes=499 epoch=133 pctEpochElapsed=22.85`
  
 `
-[2020-12-26 19:14:50-05:00] status=validating height=57554798 elapsed=26 behind=31 lastVote=57554853 rootSlot=57554803 leaderSlots=488 skippedSlots=131 pctSkipped=26.84 pctTotSkipped=29.34 pctSkippedDelta=-8.52 pctTotDelinquent=1.68 version=1.4.19 pctNewerVersions=0 balance=278.12 activatedStake=701169.33 credits=49487327 commission=0 avgSlotTime=.50 nodes=506 epoch=133 pctEpochElapsed=22.88`
+[2020-12-26 19:14:50-05:00] status=validating height=57554798 elapsed=26 behind=31 lastVote=57554853 rootSlot=57554803 leaderSlots=488 skippedSlots=131 pctSkipped=26.84 pctTotSkipped=29.34 pctSkippedDelta=-8.52 pctTotDelinquent=1.68 version=1.4.19 pctNewerVersions=0 balance=278.12 activatedStake=701169.33 credits=49487327 commission=0 outstandingVotes=1 avgSlotTime=.50 tps=890 nodes=506 epoch=133 pctEpochElapsed=22.88`
  
 `
-[2020-12-26 19:15:55-05:00] status=validating height=57554914 elapsed=36 behind=28 lastVote=57554983 rootSlot=57554917 leaderSlots=488 skippedSlots=131 pctSkipped=26.84 pctTotSkipped=29.33 pctSkippedDelta=-8.48 pctTotDelinquent=1.68 version=1.4.19 pctNewerVersions=0 balance=278.12 activatedStake=701169.33 credits=49487408 commission=0 avgSlotTime=.50 nodes=503 epoch=133 pctEpochElapsed=22.91`
+[2020-12-26 19:15:55-05:00] status=validating height=57554914 elapsed=36 behind=28 lastVote=57554983 rootSlot=57554917 leaderSlots=488 skippedSlots=131 pctSkipped=26.84 pctTotSkipped=29.33 pctSkippedDelta=-8.48 pctTotDelinquent=1.68 version=1.4.19 pctNewerVersions=0 balance=278.12 activatedStake=701169.33 credits=49487408 commission=0 outstandingVotes=1 avgSlotTime=.50 tps=788 nodes=503 epoch=133 pctEpochElapsed=22.91`
 
 The Zabbix agent on the host can process the log data. The log line entries that are imported by the server are:
 
@@ -31,8 +31,10 @@ The Zabbix agent on the host can process the log data. The log line entries that
 * **activatedStake** the activated stake of this node
 * **pctTotDelinquent** percentage of delinquent nodes for the validator set (if high some general problem is likely to be the cause)
 * **pctNewerVersions** percentage of nodes with newer version than this node based on stake (detects the requirement for updates)
+* **outstandingVotes** number of votes that are not yet casted (currently experimental and not enabled by default)
 * **nodes** the number of nodes
-* **avgSlotTime** average slot time for the configured interval
+* **avgSlotTime** average slot time for polling interval
+* **tps** transactions per second for polling interval
 
 ### Installation
 
@@ -44,6 +46,10 @@ Additional useful templates for GPU and SMART monitoring are available from the 
 
 ### New
 
+outstanding votes added
+
+tps (transactions per second) added
+
 More options for logfile management (option 1 or 2 recommended use with Zabbix)
 
 'behind' added as a measure of slot distance from the cluster height.
@@ -53,6 +59,8 @@ Balances are now checked for the identity pubkey with a related trigger for a lo
 RPC queries are wrapped with `timeout` in order to prevent any possible deadlock.
 
 ### Issues
+
+Outstanding votes is not fully implemented yet, consistency checks are missing.
 
 Getting the timestamp from `solana block-time`sometimes fails causing a `Block Not Found` error. However, it is not a critical value and does only affect `avgSlotTime` calculation, which is not a value used for uptime monitoring.
 
