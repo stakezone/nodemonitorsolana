@@ -46,6 +46,8 @@ Additional useful templates for GPU and SMART monitoring are available from the 
 
 ### New
 
+fix for v1.6.7, note: this is a temporary fix for a breaking change, a complete refactoring is coming soon. 
+
 outstanding votes added
 
 tps (transactions per second) added
