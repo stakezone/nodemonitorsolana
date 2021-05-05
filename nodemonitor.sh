@@ -7,28 +7,28 @@
 ###    if suppressing error messages is preferred, run as './nodemonitor.sh 2> /dev/null'
 
 ###    CONFIG    ##################################################################################################
-CONFIGDIR="$HOME/.config/solana" # the directory for the config files, usually '$HOME/.config/solana'
-###    OPTIONAL        #
-IDENTITYPUBKEY=""      # identity pubkey for the validator, insert if autodiscovery fails
-VOTEACCOUNT=""         # vote account address for the validator, specify if there are more than one
-SLEEP1="30"            # polls every SLEEP1 sec, please use a number value in seconds in order to enable proper interval calculation
-VALIDATORCHECKS="on"   # set to 'on' for obtaining validator metrics, will be autodiscovered to 'off' when flag '--no-voting' is set
-ADDITIONALMETRICS="on" # set to 'on' for additional general metrics
-GOVERNANCE="off"        # EXPERIMENTAL set to 'on' for governance metrics, might not work with all configurations, spl-token-cli must be installed
-BINDIR=""              # auto detection of the solana binary directory can fail, or an alternative custom installation can be specified
-RPCURL=""              # default is localhost with port number autodiscovered, alternatively it can be specified like 'http://custom.rpc.com:8899'
-FORMAT="SOL"           # amounts shown in 'SOL' instead of 'Lamports', when choosing Lamports dependent trigger amounts need to be adjusted
-LOGNAME=""             # a custom monitor log file name can be chosen, if left empty default is 'nodecheck-<username>.log'
-LOGPATH="$(pwd)"       # the directory where the log file is stored, for customization insert path like: '/my/path'
-LOGSIZE="200"          # the max number of lines after that the log gets truncated to reduce its size
-LOGROTATION="1"        # options for log rotation: (1) rotate to $LOGNAME.1 every $LOGSIZE lines;  (2) append to $LOGNAME.1 every $LOGSIZE lines; (3) truncate $logfile to $LOGSIZE every iteration
+CONFIGDIR="" # the directory for the config files, eg.: '$HOME/.config/solana'
+### optional:          #
+IDENTITYPUBKEY="HM2hzFLTd5TAhejGFjaXAm8LLjdmnj7bqQrzpRTaawdo"                  # identity pubkey for the validator, insert if autodiscovery fails
+VOTEACCOUNT="2MTbucJY3Liq8i7Kz5i75vRYG5b4fGJYYSUZBAMYvkUP"                     # vote account address for the validator, specify if there are more than one
+SLEEP1="30"                        # polls every SLEEP1 sec, please use a number value in seconds in order to enable proper interval calculation
+VALIDATORCHECKS="on"               # set to 'on' for obtaining validator metrics, will be autodiscovered to 'off' when flag '--no-voting' is set
+ADDITIONALMETRICS="on"             # set to 'on' for additional general metrics
+GOVERNANCE="on"                    # EXPERIMENTAL set to 'on' for governance metrics, might not work with all configurations, spl-token-cli must be installed
+BINDIR="/home/tds/solana/target/release"                          # auto detection of the solana binary directory can fail, or an alternative custom installation can be specified
+RPCURL=""                          # default is localhost with port number autodiscovered, alternatively it can be specified like 'http://custom.rpc.com:8899'
+FORMAT="SOL"                       # amounts shown in 'SOL' instead of 'Lamports', when choosing Lamports dependent trigger amounts need to be adjusted
+LOGNAME=""                         # a custom monitor log file name can be chosen, if left empty default is 'nodecheck-<username>.log'
+LOGPATH="$(pwd)"                   # the directory where the log file is stored, for customization insert path like: '/my/path'
+LOGSIZE="200"                      # the max number of lines after that the log gets truncated to reduce its size
+LOGROTATION="1"                    # options for log rotation: (1) rotate to $LOGNAME.1 every $LOGSIZE lines;  (2) append to $LOGNAME.1 every $LOGSIZE lines; (3) truncate $logfile to $LOGSIZE every iteration
 TIMEFORMAT="-u --rfc-3339=seconds" # date format for log line entries
 ###  INTERNAL          #
-colorI='\033[0;32m'    # black 30, red 31, green 32, yellow 33, blue 34, magenta 35, cyan 36, white 37
-colorD='\033[0;90m'    # for light color 9 instead of 3
-colorE='\033[0;31m'    #
-colorW='\033[0;33m'    #
-noColor='\033[0m'      # no color
+colorI='\033[0;32m' # black 30, red 31, green 32, yellow 33, blue 34, magenta 35, cyan 36, white 37
+colorD='\033[0;90m' # for light color 9 instead of 3
+colorE='\033[0;31m' #
+colorW='\033[0;33m' #
+noColor='\033[0m'   # no color
 ###  END CONFIG  ##################################################################################################
 
 if [ -n "$BINDIR" ]; then
@@ -100,8 +100,10 @@ while true; do
       blockProduction=$(tail -n1 <<<$($cli block-production --url $RPCURL --output json-compact))
       validatorBlockProduction=$(jq -r '.leaders[] | select(.identityPubkey == '\"$IDENTITYPUBKEY\"')' <<<$blockProduction)
       validators=$($cli validators --url $RPCURL --output json-compact)
-      currentValidatorInfo=$(jq -r '.currentValidators[] | select(.voteAccountPubkey == '\"$VOTEACCOUNT\"')' <<<$validators)
-      delinquentValidatorInfo=$(jq -r '.delinquentValidators[] | select(.voteAccountPubkey == '\"$VOTEACCOUNT\"')' <<<$validators)
+#      currentValidatorInfo=$(jq -r '.currentValidators[] | select(.voteAccountPubkey == '\"$VOTEACCOUNT\"')' <<<$validators)
+	  currentValidatorInfo=$(jq -r '.validators[]  | select(.delinquent == 'false') | select(.voteAccountPubkey == '\"$VOTEACCOUNT\"')' <<<$validators)
+#	  delinquentValidatorInfo=$(jq -r '.delinquentValidators[] | select(.voteAccountPubkey == '\"$VOTEACCOUNT\"')' <<<$validators)
+      delinquentValidatorInfo=$(jq -r '.validators[] | select(.delinquent == 'true') | select(.voteAccountPubkey == '\"$VOTEACCOUNT\"')' <<<$validators)
    fi
    if [[ (-n "$currentValidatorInfo" || "$delinquentValidatorInfo") && "$VALIDATORCHECKS" == "on" ]] || [[ "$validatorBlockTimeTest" -eq "1" && "$VALIDATORCHECKS" != "on" ]]; then
       status="up"
@@ -179,8 +181,6 @@ while true; do
          if [[ -n "$slotHeight" && -n "$blockHeight" ]]; then behind=$(($slotHeight - $blockHeight)); else behind=""; fi
          logentry="$logentry behind=$behind"
       fi
-      avgSlotTime=""
-      tps=""
       if [ "$ADDITIONALMETRICS" == "on" ]; then
          nodes=$($cli gossip --url $RPCURL | grep -Po "Nodes:\s+\K[0-9]+") #currently there is no json output from command
          epochInfo=$($cli epoch-info --url $RPCURL --output json-compact)
