@@ -14,7 +14,7 @@ VOTEACCOUNT=""          # vote account address for the validator, specify if the
 SLEEP1="30"             # polls every SLEEP1 sec, please use a number value in seconds in order to enable proper interval calculation
 VALIDATORCHECKS="on"    # set to 'on' for obtaining validator metrics, will be autodiscovered to 'off' when flag '--no-voting' is set
 ADDITIONALMETRICS="on"  # set to 'on' for additional general metrics
-GOVERNANCE="on"         # EXPERIMENTAL set to 'on' for governance metrics, might not work with all configurations, spl-token-cli must be installed
+GOVERNANCE="off"        # EXPERIMENTAL set to 'on' for governance metrics, might not work with all configurations, spl-token-cli must be installed
 BINDIR=""               # auto detection of the solana binary directory can fail, or an alternative custom installation can be specified
 RPCURL=""               # default is localhost with port number autodiscovered, alternatively it can be specified like 'http://custom.rpc.com:8899'
 FORMAT="SOL"            # amounts shown in 'SOL' instead of 'Lamports', when choosing Lamports dependent trigger amounts need to be adjusted
@@ -100,9 +100,9 @@ while true; do
       blockProduction=$(tail -n1 <<<$($cli block-production --url $RPCURL --output json-compact))
       validatorBlockProduction=$(jq -r '.leaders[] | select(.identityPubkey == '\"$IDENTITYPUBKEY\"')' <<<$blockProduction)
       validators=$($cli validators --url $RPCURL --output json-compact)
-#      currentValidatorInfo=$(jq -r '.currentValidators[] | select(.voteAccountPubkey == '\"$VOTEACCOUNT\"')' <<<$validators)
-	  currentValidatorInfo=$(jq -r '.validators[]  | select(.delinquent == 'false') | select(.voteAccountPubkey == '\"$VOTEACCOUNT\"')' <<<$validators)
-#	  delinquentValidatorInfo=$(jq -r '.delinquentValidators[] | select(.voteAccountPubkey == '\"$VOTEACCOUNT\"')' <<<$validators)
+#     currentValidatorInfo=$(jq -r '.currentValidators[] | select(.voteAccountPubkey == '\"$VOTEACCOUNT\"')' <<<$validators)
+      currentValidatorInfo=$(jq -r '.validators[]  | select(.delinquent == 'false') | select(.voteAccountPubkey == '\"$VOTEACCOUNT\"')' <<<$validators)
+#     delinquentValidatorInfo=$(jq -r '.delinquentValidators[] | select(.voteAccountPubkey == '\"$VOTEACCOUNT\"')' <<<$validators)
       delinquentValidatorInfo=$(jq -r '.validators[] | select(.delinquent == 'true') | select(.voteAccountPubkey == '\"$VOTEACCOUNT\"')' <<<$validators)
    fi
    if [[ (-n "$currentValidatorInfo" || "$delinquentValidatorInfo") && "$VALIDATORCHECKS" == "on" ]] || [[ "$validatorBlockTimeTest" -eq "1" && "$VALIDATORCHECKS" != "on" ]]; then
