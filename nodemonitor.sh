@@ -7,7 +7,7 @@
 ###    if suppressing error messages is preferred, run as './nodemonitor.sh 2> /dev/null'
 
 ###    CONFIG    ##################################################################################################
-CONFIGDIR=""            # the directory for the config files, eg.: '$HOME/.config/solana'
+CONFIGDIR="$HOME/.config/solana"            # the directory for the config files, eg.: '$HOME/.config/solana'
 ### optional:           #
 IDENTITYPUBKEY=""       # identity pubkey for the validator, insert if autodiscovery fails
 VOTEACCOUNT=""          # vote account address for the validator, specify if there are more than one
@@ -100,9 +100,9 @@ while true; do
       blockProduction=$(tail -n1 <<<$($cli block-production --url $RPCURL --output json-compact))
       validatorBlockProduction=$(jq -r '.leaders[] | select(.identityPubkey == '\"$IDENTITYPUBKEY\"')' <<<$blockProduction)
       validators=$($cli validators --url $RPCURL --output json-compact)
-#     currentValidatorInfo=$(jq -r '.currentValidators[] | select(.voteAccountPubkey == '\"$VOTEACCOUNT\"')' <<<$validators)
+      #currentValidatorInfo=$(jq -r '.currentValidators[] | select(.voteAccountPubkey == '\"$VOTEACCOUNT\"')' <<<$validators) # pre v1.6.7
       currentValidatorInfo=$(jq -r '.validators[]  | select(.delinquent == 'false') | select(.voteAccountPubkey == '\"$VOTEACCOUNT\"')' <<<$validators)
-#     delinquentValidatorInfo=$(jq -r '.delinquentValidators[] | select(.voteAccountPubkey == '\"$VOTEACCOUNT\"')' <<<$validators)
+      #delinquentValidatorInfo=$(jq -r '.delinquentValidators[] | select(.voteAccountPubkey == '\"$VOTEACCOUNT\"')' <<<$validators) # pre v1.6.7
       delinquentValidatorInfo=$(jq -r '.validators[] | select(.delinquent == 'true') | select(.voteAccountPubkey == '\"$VOTEACCOUNT\"')' <<<$validators)
    fi
    if [[ (-n "$currentValidatorInfo" || "$delinquentValidatorInfo") && "$VALIDATORCHECKS" == "on" ]] || [[ "$validatorBlockTimeTest" -eq "1" && "$VALIDATORCHECKS" != "on" ]]; then
@@ -189,12 +189,12 @@ while true; do
          transactionCount=$($cli transaction-count --url $RPCURL) #currently there is no json output from command
          if [[ -n "$blockHeightTime" && -n "$blockHeightTime_" ]]; then
             if [[ -n "$blockHeight" && -n "$blockHeight_" ]]; then avgSlotTime=$(echo "scale=2 ; ($blockHeightTime - $blockHeightTime_) / ($blockHeight - $blockHeight_)" | bc); fi
-            if [[ -n "$transactionCount" && -n "$transactionCount_" ]]; then tps=$(echo "scale=0 ; ($transactionCount - $transactionCount_) / ($blockHeightTime - $blockHeightTime_)" | bc); fi
+            if [[ -n "$transactionCount" && -n "$transactionCount_" ]]; then avgTPS=$(echo "scale=0 ; ($transactionCount - $transactionCount_) / ($blockHeightTime - $blockHeightTime_)" | bc); fi
          fi
          transactionCount_=$transactionCount
          blockHeightTime_=$blockHeightTime
          blockHeight_=$blockHeight
-         logentry="$logentry avgSlotTime=$avgSlotTime tps=$tps nodes=$nodes epoch=$epoch pctEpochElapsed=$pctEpochElapsed"
+         logentry="$logentry avgSlotTime=$avgSlotTime avgTPS=$avgTPS nodes=$nodes epoch=$epoch pctEpochElapsed=$pctEpochElapsed"
       fi
       variables="status=$status $logentry"
       logentry="[$now] $variables"
