@@ -1,7 +1,5 @@
 # nodemonitorsolana
 
-Template unchanged, tps and outstandingVotes are not yet implemented.
-
 A complete log file based Solana validator uptime monitoring solution for Zabbix. It consists of the shell script nodemonitor.sh for generating log files on the host and the template zbx_5_template_nodemonitorsolana.xml for the Zabbix 5.0 server. Also useful for other monitoring platforms and as a tool.
 
 ### Concept
@@ -9,13 +7,13 @@ A complete log file based Solana validator uptime monitoring solution for Zabbix
 nodemonitor.sh generates human-readable logs that look like:
 
 `
-[2020-12-26 19:13:45-05:00] status=validating height=57554659 elapsed=35 behind=36 lastVote=57554703 rootSlot=57554660 leaderSlots=488 skippedSlots=131 pctSkipped=26.84 pctTotSkipped=29.33 pctSkippedDelta=-8.48 pctTotDelinquent=1.68 version=1.4.19 pctNewerVersions=0 balance=278.12 activatedStake=701169.33 credits=49487265 commission=0 outstandingVotes=1 avgSlotTime=.48 tps=681 nodes=499 epoch=133 pctEpochElapsed=22.85`
+[2020-12-26 19:13:45-05:00] status=validating height=57554659 elapsed=35 behind=36 lastVote=57554703 rootSlot=57554660 leaderSlots=488 skippedSlots=131 pctSkipped=26.84 pctTotSkipped=29.33 pctSkippedDelta=-8.48 pctTotDelinquent=1.68 version=1.4.19 pctNewerVersions=0 balance=278.12 activatedStake=701169.33 credits=49487265 commission=0 outstandingVotes=1 avgSlotTime=.48 avgTPS=681 nodes=499 epoch=133 pctEpochElapsed=22.85`
  
 `
-[2020-12-26 19:14:50-05:00] status=validating height=57554798 elapsed=26 behind=31 lastVote=57554853 rootSlot=57554803 leaderSlots=488 skippedSlots=131 pctSkipped=26.84 pctTotSkipped=29.34 pctSkippedDelta=-8.52 pctTotDelinquent=1.68 version=1.4.19 pctNewerVersions=0 balance=278.12 activatedStake=701169.33 credits=49487327 commission=0 outstandingVotes=1 avgSlotTime=.50 tps=890 nodes=506 epoch=133 pctEpochElapsed=22.88`
+[2020-12-26 19:14:50-05:00] status=validating height=57554798 elapsed=26 behind=31 lastVote=57554853 rootSlot=57554803 leaderSlots=488 skippedSlots=131 pctSkipped=26.84 pctTotSkipped=29.34 pctSkippedDelta=-8.52 pctTotDelinquent=1.68 version=1.4.19 pctNewerVersions=0 balance=278.12 activatedStake=701169.33 credits=49487327 commission=0 outstandingVotes=1 avgSlotTime=.50 avgTPS=890 nodes=506 epoch=133 pctEpochElapsed=22.88`
  
 `
-[2020-12-26 19:15:55-05:00] status=validating height=57554914 elapsed=36 behind=28 lastVote=57554983 rootSlot=57554917 leaderSlots=488 skippedSlots=131 pctSkipped=26.84 pctTotSkipped=29.33 pctSkippedDelta=-8.48 pctTotDelinquent=1.68 version=1.4.19 pctNewerVersions=0 balance=278.12 activatedStake=701169.33 credits=49487408 commission=0 outstandingVotes=1 avgSlotTime=.50 tps=788 nodes=503 epoch=133 pctEpochElapsed=22.91`
+[2020-12-26 19:15:55-05:00] status=validating height=57554914 elapsed=36 behind=28 lastVote=57554983 rootSlot=57554917 leaderSlots=488 skippedSlots=131 pctSkipped=26.84 pctTotSkipped=29.33 pctSkippedDelta=-8.48 pctTotDelinquent=1.68 version=1.4.19 pctNewerVersions=0 balance=278.12 activatedStake=701169.33 credits=49487408 commission=0 outstandingVotes=1 avgSlotTime=.50 avgTPS=788 nodes=503 epoch=133 pctEpochElapsed=22.91`
 
 The Zabbix agent on the host can process the log data. The log line entries that are imported by the server are:
 
@@ -27,14 +25,14 @@ The Zabbix agent on the host can process the log data. The log line entries that
 * **leaderSlots** number of leader slots
 * **pctTotSkipped** percentage of total skipped leader slots for the validator set 
 * **pctSkippedDelta** percentual derivation of pctSkipped from pctTotSkipped, can be negative if below average (how the node performs in relation to the average)
-* **balance** SOL/lamports balance for the identity pubkey
-* **activatedStake** the activated stake of this node
+* **balance** SOL/Lamports balance for the identity pubkey
+* **activatedStake** the activated stake for this node
 * **pctTotDelinquent** percentage of delinquent nodes for the validator set (if high some general problem is likely to be the cause)
 * **pctNewerVersions** percentage of nodes with newer version than this node based on stake (detects the requirement for updates)
 * **outstandingVotes** number of votes that are not yet casted (currently experimental and not enabled by default)
 * **nodes** the number of nodes
 * **avgSlotTime** average slot time for polling interval
-* **tps** transactions per second for polling interval
+* **avgTPS** transactions per second for polling interval
 
 ### Installation
 
