@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>5.0</version>
-    <date>2021-05-07T03:09:58Z</date>
+    <date>2021-05-10T05:54:59Z</date>
     <groups>
         <group>
             <name>Templates/Applications</name>
@@ -54,6 +54,19 @@
                     <history>5d</history>
                     <trends>14d</trends>
                     <value_type>FLOAT</value_type>
+                    <applications>
+                        <application>
+                            <name>Solana Validator</name>
+                        </application>
+                    </applications>
+                </item>
+                <item>
+                    <name>avgTPS</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>logrt[{$NMSLOGFILE},&quot;avgTPS=([0-9\.\-]*)&quot;,,,skip,\1,]</key>
+                    <delay>{$NMSUPDATEINTERVAL}</delay>
+                    <history>5d</history>
+                    <trends>14d</trends>
                     <applications>
                         <application>
                             <name>Solana Validator</name>
@@ -309,19 +322,6 @@ error can have various causes, typically the solana-validator process is down.</
                             <manual_close>YES</manual_close>
                         </trigger>
                     </triggers>
-                </item>
-                <item>
-                    <name>avgTPS</name>
-                    <type>ZABBIX_ACTIVE</type>
-                    <key>logrt[{$NMSLOGFILE},&quot;tps=([0-9\.\-]*)&quot;,,,skip,\1,]</key>
-                    <delay>{$NMSUPDATEINTERVAL}</delay>
-                    <history>5d</history>
-                    <trends>14d</trends>
-                    <applications>
-                        <application>
-                            <name>Solana Validator</name>
-                        </application>
-                    </applications>
                 </item>
             </items>
             <macros>
@@ -1028,7 +1028,7 @@ error can have various causes, typically the solana-validator process is down.</
                     <color>199C0D</color>
                     <item>
                         <host>Template App Solana Validator</host>
-                        <key>logrt[{$NMSLOGFILE},&quot;tps=([0-9\.\-]*)&quot;,,,skip,\1,]</key>
+                        <key>logrt[{$NMSLOGFILE},&quot;avgTPS=([0-9\.\-]*)&quot;,,,skip,\1,]</key>
                     </item>
                 </graph_item>
             </graph_items>
