@@ -170,7 +170,7 @@ while true; do
                 logentry="$logentry leaderSlots=$leaderSlots skippedSlots=$skippedSlots pctSkipped=$pctSkipped pctTotSkipped=$pctTotSkipped pctSkippedDelta=$pctSkippedDelta pctTotDelinquent=$pctTotDelinquent"
                 logentry="$logentry version=$version pctNewerVersions=$pctNewerVersions balance=$balance activatedStake=$activatedStakeDisplay credits=$credits commission=$commission"
                 if [ "$GOVERNANCE" == "on" ]; then
-                    outstandingVotes=$(spl-token accounts | grep -c "[0-9]\.[0-9]")
+                    outstandingVotes=$(spl-token accounts --url $RPCURL | grep -c "[0-9]\.[0-9]")
                     logentry="$logentry outstandingVotes=$outstandingVotes"
                 fi
             else
