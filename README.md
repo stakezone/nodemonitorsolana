@@ -44,6 +44,8 @@ Additional useful templates for GPU and SMART monitoring are available from the 
 
 ### New
 
+the flag `--full-rpc-api` is required for unlimited api access with `solana-validator`
+
 recent versions changed back to how if was before v1.6.7, lines 103-104 needs to be de-commented, 105-107 commented out
 
 fix for v1.6.7, note: this is a temporary fix for a breaking change, a complete refactoring is coming soon. 
